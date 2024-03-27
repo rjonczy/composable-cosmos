@@ -3,13 +3,13 @@ package keeper
 import (
 	"context"
 
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/core/store"
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	accountkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -29,16 +29,16 @@ type Keeper struct {
 var _ bankkeeper.Keeper = Keeper{}
 
 func NewBaseKeeper(
+	logger log.Logger,
 	cdc codec.BinaryCodec,
-	storeKey storetypes.StoreKey,
+	storeService store.KVStoreService,
 	ak accountkeeper.AccountKeeper,
 	blockedAddrs map[string]bool,
 	tfmk *transfermiddlewarekeeper.Keeper,
 	authority string,
 ) Keeper {
 	keeper := Keeper{
-		BaseKeeper: bankkeeper.NewBaseKeeper(cdc, storeKey, ak, blockedAddrs, authority),
-		sk:         stakingkeeper.Keeper{},
+		BaseKeeper: bankkeeper.NewBaseKeeper(cdc, storeService, ak, blockedAddrs, authority, logger),
 		tfmk:       tfmk,
 		acck:       ak,
 	}
@@ -46,7 +46,6 @@ func NewBaseKeeper(
 }
 
 func (k *Keeper) RegisterKeepers(sk banktypes.StakingKeeper) {
-	k.ak = ak
 	k.sk = sk
 }
 

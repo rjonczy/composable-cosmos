@@ -29,9 +29,10 @@ func NewKeeper(
 	bk types.BankKeeper,
 	scopedKeeper exported.ScopedKeeper,
 	ibcTransfermiddleware *ibctransfermiddleware.Keeper,
+	authority string,
 ) Keeper {
 	keeper := Keeper{
-		Keeper:                ibctransferkeeper.NewKeeper(cdc, key, paramSpace, ics4Wrapper, channelKeeper, portKeeper, authKeeper, bk, scopedKeeper),
+		Keeper:                ibctransferkeeper.NewKeeper(cdc, key, paramSpace, ics4Wrapper, channelKeeper, portKeeper, authKeeper, bk, scopedKeeper, authority),
 		IbcTransfermiddleware: ibcTransfermiddleware,
 		cdc:                   cdc,
 	}
