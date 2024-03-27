@@ -11,7 +11,7 @@ import (
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
+	evidencetypes "cosmossdk.io/x/evidence/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
@@ -27,7 +27,6 @@ import (
 	icqtypes "github.com/strangelove-ventures/async-icq/v7/types"
 
 	routertypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward/types"
-	alliancemoduletypes "github.com/terra-money/alliance/x/alliance/types"
 
 	ibchookstypes "github.com/notional-labs/composable/v6/x/ibc-hooks/types"
 	ratelimitmoduletypes "github.com/notional-labs/composable/v6/x/ratelimit/types"
@@ -58,7 +57,7 @@ func (appKeepers *AppKeepers) GenerateKeys() {
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, icqtypes.StoreKey, capabilitytypes.StoreKey, consensusparamtypes.StoreKey, wasm08types.StoreKey,
 		authzkeeper.StoreKey, stakingmiddleware.StoreKey, ibctransfermiddleware.StoreKey,
-		crisistypes.StoreKey, routertypes.StoreKey, transfermiddlewaretypes.StoreKey, group.StoreKey, minttypes.StoreKey, alliancemoduletypes.StoreKey, wasm.StoreKey, ibchookstypes.StoreKey, icahosttypes.StoreKey, ratelimitmoduletypes.StoreKey, txBoundaryTypes.StoreKey,
+		crisistypes.StoreKey, routertypes.StoreKey, transfermiddlewaretypes.StoreKey, group.StoreKey, minttypes.StoreKey, wasm.StoreKey, ibchookstypes.StoreKey, icahosttypes.StoreKey, ratelimitmoduletypes.StoreKey, txBoundaryTypes.StoreKey,
 	)
 
 	// Define transient store keys

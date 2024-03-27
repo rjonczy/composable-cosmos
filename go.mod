@@ -1,6 +1,6 @@
 module github.com/notional-labs/composable/v6
 
-go 1.20
+go 1.22
 
 require (
 	cosmossdk.io/math v1.1.2
@@ -221,6 +221,8 @@ require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/tools/rosetta v0.2.1
 	cosmossdk.io/store v1.0.2
+	cosmossdk.io/simapp v0.0.0-20240326102947-160c41842e36
+	cosmossdk.io/x/evidence v0.1.0
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d // indirect

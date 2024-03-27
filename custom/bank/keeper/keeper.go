@@ -16,15 +16,12 @@ import (
 	banktypes "github.com/notional-labs/composable/v6/custom/bank/types"
 
 	transfermiddlewarekeeper "github.com/notional-labs/composable/v6/x/transfermiddleware/keeper"
-
-	alliancekeeper "github.com/terra-money/alliance/x/alliance/keeper"
 )
 
 type Keeper struct {
 	bankkeeper.BaseKeeper
 
 	tfmk banktypes.TransferMiddlewareKeeper
-	ak   alliancekeeper.Keeper
 	sk   banktypes.StakingKeeper
 	acck accountkeeper.AccountKeeper
 }
@@ -41,7 +38,6 @@ func NewBaseKeeper(
 ) Keeper {
 	keeper := Keeper{
 		BaseKeeper: bankkeeper.NewBaseKeeper(cdc, storeKey, ak, blockedAddrs, authority),
-		ak:         alliancekeeper.Keeper{},
 		sk:         stakingkeeper.Keeper{},
 		tfmk:       tfmk,
 		acck:       ak,
@@ -49,7 +45,7 @@ func NewBaseKeeper(
 	return keeper
 }
 
-func (k *Keeper) RegisterKeepers(ak alliancekeeper.Keeper, sk banktypes.StakingKeeper) {
+func (k *Keeper) RegisterKeepers(sk banktypes.StakingKeeper) {
 	k.ak = ak
 	k.sk = sk
 }
