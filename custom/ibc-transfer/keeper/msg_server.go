@@ -6,8 +6,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	custombankkeeper "github.com/notional-labs/composable/v6/custom/bank/keeper"
+	"github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibctransfermiddlewaretypes "github.com/notional-labs/composable/v6/x/ibctransfermiddleware/types"
 )
 

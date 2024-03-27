@@ -1180,8 +1180,8 @@ github.com/ssgreg/nlreturn/v2 v2.2.1 h1:X4XDI7jstt3ySqGU86YGAURbxw3oTDPK9sPEi6YE
 github.com/ssgreg/nlreturn/v2 v2.2.1/go.mod h1:E/iiPB78hV7Szg2YfRgyIrk1AD6JVMTRkkxBiELzh2I=
 github.com/stbenjam/no-sprintf-host-port v0.1.1 h1:tYugd/yrm1O0dV+ThCbaKZh195Dfm07ysF0U6JQXczc=
 github.com/stbenjam/no-sprintf-host-port v0.1.1/go.mod h1:TLhvtIvONRzdmkFiio4O8LHsN9N74I+PhRquPsxpL0I=
-github.com/strangelove-ventures/async-icq/v7 v7.0.0-20230413165143-a3b65ccdc897 h1:lCTD5L1v1K1KC6KXjyt4o1X+yzV14RbbrPZaF29n8uI=
-github.com/strangelove-ventures/async-icq/v7 v7.0.0-20230413165143-a3b65ccdc897/go.mod h1:ag05Q54Wkr0jVwfe+14sxnuWbw0gBOxtPQv9afBBnr0=
+github.com/cosmos/ibc-apps/modules/async-icq/v8 v7.0.0-20230413165143-a3b65ccdc897 h1:lCTD5L1v1K1KC6KXjyt4o1X+yzV14RbbrPZaF29n8uI=
+github.com/cosmos/ibc-apps/modules/async-icq/v8 v7.0.0-20230413165143-a3b65ccdc897/go.mod h1:ag05Q54Wkr0jVwfe+14sxnuWbw0gBOxtPQv9afBBnr0=
 github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94/go.mod h1:AZpEONHx3DKn8O/DFsRAY58/XVQiIPMTMB1SddzLXVw=
 github.com/streadway/amqp v0.0.0-20190827072141-edfb9018d271/go.mod h1:AZpEONHx3DKn8O/DFsRAY58/XVQiIPMTMB1SddzLXVw=
 github.com/streadway/handy v0.0.0-20190108123426-d5acb3125c2a/go.mod h1:qNTQ5P5JnDBl6z3cMAg/SywNDC5ABu5ApDIw6lUbRmI=
