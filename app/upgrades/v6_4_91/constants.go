@@ -1,7 +1,7 @@
 package v6_4_91
 
 import (
-	store "github.com/cosmos/cosmos-sdk/store/types"
+	store "cosmossdk.io/store/types"
 	"github.com/notional-labs/composable/v6/app/upgrades"
 )
 
