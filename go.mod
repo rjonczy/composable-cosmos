@@ -258,7 +258,6 @@ require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/store v1.1.0
 	cosmossdk.io/tools/rosetta v0.2.1
-	cosmossdk.io/x/authz v0.0.0-20240326103109-23723bef2152
 	cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/feegrant v0.1.0
 	cosmossdk.io/x/upgrade v0.1.1

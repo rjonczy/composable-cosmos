@@ -104,7 +104,7 @@ lint:
 ###                                  Proto                                  ###
 ###############################################################################
 
-protoVer=0.12.1
+protoVer=0.14.0
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 containerProtoGen=proto-gen-$(protoVer)
 containerProtoFmt=proto-fmt-$(protoVer)
@@ -113,8 +113,7 @@ proto-all: proto-format proto-gen
 
 proto-gen:
 	@echo "Generating Protobuf files"
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then docker start -a $(containerProtoGen); else docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
-		sh ./scripts/protocgen.sh; fi
+	@$(protoImage) sh ./scripts/protocgen.sh
 
 proto-format:
 	@echo "Formatting Protobuf files"

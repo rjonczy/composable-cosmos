@@ -137,7 +137,7 @@ func (k Keeper) ParsePacketInfo(packet channeltypes.Packet, direction types.Pack
 		denom = k.ParseDenomFromRecvPacket(packet, packetData)
 	}
 
-	amount, ok := sdk.NewIntFromString(packetData.Amount)
+	amount, ok := math.NewIntFromString(packetData.Amount)
 	if !ok {
 		return RateLimitedPacketInfo{},
 			errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "Unable to cast packet amount '%s' to sdkmath.Int", packetData.Amount)
