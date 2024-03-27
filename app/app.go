@@ -85,7 +85,6 @@ import (
 	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
-	ibcclientclient "github.com/cosmos/ibc-go/v8/modules/core/02-client/client"
 	ibchost "github.com/cosmos/ibc-go/v8/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	customibctransfer "github.com/notional-labs/composable/v6/custom/ibc-transfer"
@@ -172,8 +171,6 @@ func getGovProposalHandlers() []govclient.ProposalHandler {
 
 	govProposalHandlers = append(govProposalHandlers,
 		paramsclient.ProposalHandler,
-		ibcclientclient.UpdateClientProposalHandler,
-		ibcclientclient.UpgradeProposalHandler,
 		// this line is used by starport scaffolding # stargate/app/govProposalHandler
 	)
 
