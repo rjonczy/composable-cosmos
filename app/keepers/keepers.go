@@ -5,11 +5,15 @@ import (
 	"path/filepath"
 	"strings"
 
+	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
 
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
@@ -98,6 +102,9 @@ import (
 	wasm08Keeper "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/keeper"
 	wasm08types "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
 
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmvm "github.com/CosmWasm/wasmvm"
+
 	ibc_hooks "github.com/notional-labs/composable/v6/x/ibc-hooks"
 	ibchookskeeper "github.com/notional-labs/composable/v6/x/ibc-hooks/keeper"
 	ibchookstypes "github.com/notional-labs/composable/v6/x/ibc-hooks/types"
@@ -162,6 +169,7 @@ type AppKeepers struct {
 
 // InitNormalKeepers initializes all 'normal' keepers.
 func (appKeepers *AppKeepers) InitNormalKeepers(
+	logger log.Logger,
 	appCodec codec.Codec,
 	cdc *codec.LegacyAmino,
 	bApp *baseapp.BaseApp,
@@ -174,24 +182,31 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	enabledProposals []wasm.ProposalType,
 	devnetGov *string,
 ) {
+
+	govModAddress := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+
+	if devnetGov != nil {
+		govModAddress = *devnetGov
+	}
+
 	// add keepers
 	appKeepers.AccountKeeper = authkeeper.NewAccountKeeper(
-		appCodec, appKeepers.keys[authtypes.StoreKey], authtypes.ProtoBaseAccount, maccPerms, AccountAddressPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		appCodec, runtime.NewKVStoreService(appKeepers.keys[authtypes.StoreKey]), authtypes.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()), AccountAddressPrefix, govModAddress,
 	)
 
 	appKeepers.BankKeeper = custombankkeeper.NewBaseKeeper(
-		appCodec, appKeepers.keys[banktypes.StoreKey], appKeepers.AccountKeeper, appKeepers.BlacklistedModuleAccountAddrs(maccPerms), &appKeepers.TransferMiddlewareKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
+		logger,
+		appCodec, runtime.NewKVStoreService(appKeepers.keys[banktypes.StoreKey]), appKeepers.AccountKeeper, appKeepers.BlacklistedModuleAccountAddrs(maccPerms), &appKeepers.TransferMiddlewareKeeper, govModAddress)
 
 	appKeepers.AuthzKeeper = authzkeeper.NewKeeper(
-		appKeepers.keys[authzkeeper.StoreKey],
+		runtime.NewKVStoreService(appKeepers.keys[authzkeeper.StoreKey]),
 		appCodec,
 		bApp.MsgServiceRouter(),
 		appKeepers.AccountKeeper,
 	)
 
-	appKeepers.StakingMiddlewareKeeper = stakingmiddleware.NewKeeper(appCodec, appKeepers.keys[stakingmiddlewaretypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
-	appKeepers.IbcTransferMiddlewareKeeper = ibctransfermiddleware.NewKeeper(appCodec, appKeepers.keys[ibctransfermiddlewaretypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	appKeepers.StakingMiddlewareKeeper = stakingmiddleware.NewKeeper(appCodec, appKeepers.keys[stakingmiddlewaretypes.StoreKey], govModAddress)
+	appKeepers.IbcTransferMiddlewareKeeper = ibctransfermiddleware.NewKeeper(appCodec, appKeepers.keys[ibctransfermiddlewaretypes.StoreKey], govModAddress,
 		[]string{"centauri1ay9y5uns9khw2kzaqr3r33v2pkuptfnnr93j5j",
 			"centauri14lz7gaw92valqjearnye4shex7zg2p05mlx9q0",
 			"centauri1r2zlh2xn85v8ljmwymnfrnsmdzjl7k6w6lytan",
@@ -203,25 +218,25 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		})
 
 	appKeepers.StakingKeeper = customstaking.NewKeeper(
-		appCodec, appKeepers.keys[stakingtypes.StoreKey], appKeepers.AccountKeeper, appKeepers.BankKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(), &appKeepers.StakingMiddlewareKeeper,
+		appCodec, appKeepers.keys[stakingtypes.StoreKey], appKeepers.AccountKeeper, appKeepers.BankKeeper, govModAddress, &appKeepers.StakingMiddlewareKeeper,
 	)
 
 	appKeepers.MintKeeper = mintkeeper.NewKeeper(
 		appCodec, appKeepers.keys[minttypes.StoreKey], appKeepers.StakingKeeper,
-		appKeepers.AccountKeeper, appKeepers.BankKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		appKeepers.AccountKeeper, appKeepers.BankKeeper, authtypes.FeeCollectorName, govModAddress,
 	)
 
 	appKeepers.DistrKeeper = distrkeeper.NewKeeper(
-		appCodec, appKeepers.keys[distrtypes.StoreKey], appKeepers.AccountKeeper, appKeepers.BankKeeper,
-		appKeepers.StakingKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		appCodec, runtime.NewKVStoreService(appKeepers.keys[distrtypes.StoreKey]), appKeepers.AccountKeeper, appKeepers.BankKeeper,
+		appKeepers.StakingKeeper, authtypes.FeeCollectorName, govModAddress,
 	)
 	appKeepers.StakingKeeper.RegisterKeepers(appKeepers.DistrKeeper, appKeepers.MintKeeper)
 	appKeepers.SlashingKeeper = slashingkeeper.NewKeeper(
-		appCodec, cdc, appKeepers.keys[slashingtypes.StoreKey], appKeepers.StakingKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		appCodec, cdc, runtime.NewKVStoreService(appKeepers.keys[slashingtypes.StoreKey]), appKeepers.StakingKeeper, govModAddress,
 	)
 
 	appKeepers.CrisisKeeper = crisiskeeper.NewKeeper(appCodec, appKeepers.keys[crisistypes.StoreKey],
-		invCheckPeriod, appKeepers.BankKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		invCheckPeriod, appKeepers.BankKeeper, authtypes.FeeCollectorName, govModAddress,
 	)
 
 	groupConfig := group.DefaultConfig()
@@ -237,8 +252,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		groupConfig,
 	)
 
-	appKeepers.FeeGrantKeeper = feegrantkeeper.NewKeeper(appCodec, appKeepers.keys[feegrant.StoreKey], appKeepers.AccountKeeper)
-	appKeepers.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, appKeepers.keys[upgradetypes.StoreKey], appCodec, homePath, bApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	appKeepers.FeeGrantKeeper = feegrantkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(appKeepers.keys[feegrant.StoreKey]), appKeepers.AccountKeeper)
+	appKeepers.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, runtime.NewKVStoreService(appKeepers.keys[upgradetypes.StoreKey]), appCodec, homePath, bApp, govModAddress)
 
 	appKeepers.BankKeeper.RegisterKeepers(appKeepers.StakingKeeper)
 	// register the staking hooks
@@ -251,15 +266,10 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	// Create IBC Keeper
 	appKeepers.IBCKeeper = ibckeeper.NewKeeper(
-		appCodec, appKeepers.keys[ibchost.StoreKey], appKeepers.GetSubspace(ibchost.ModuleName), appKeepers.StakingKeeper, appKeepers.UpgradeKeeper, appKeepers.ScopedIBCKeeper,
+		appCodec, appKeepers.keys[ibchost.StoreKey], appKeepers.GetSubspace(ibchost.ModuleName), appKeepers.StakingKeeper, appKeepers.UpgradeKeeper, appKeepers.ScopedIBCKeeper, govModAddress,
 	)
 
-	govModuleAuthority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
-	if devnetGov != nil {
-		govModuleAuthority = *devnetGov
-	}
-
-	appKeepers.Wasm08Keeper = wasm08Keeper.NewKeeper(appCodec, appKeepers.keys[wasm08types.StoreKey], govModuleAuthority, homePath, &appKeepers.IBCKeeper.ClientKeeper)
+	appKeepers.Wasm08Keeper = wasm08Keeper.NewKeeperWithConfig(appCodec, runtime.NewKVStoreService(appKeepers.keys[wasm08types.StoreKey]), appKeepers.IBCKeeper.ClientKeeper, govModAddress, homePath, &appKeepers.IBCKeeper.ClientKeeper)
 
 	// ICA Host keeper
 	appKeepers.ICAHostKeeper = icahostkeeper.NewKeeper(
@@ -386,6 +396,23 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
 	availableCapabilities := strings.Join(AllCapabilities(), ",")
+
+	wasmer, err := wasmvm.NewVM(
+		wasmDir,
+		strings.Join(AllCapabilities(), ","),
+		32, // default of 32
+		false,
+		0,
+	)
+
+	if err != nil {
+		panic(err)
+	}
+
+	wasmOpts = []wasmkeeper.Option{
+		wasmkeeper.WithWasmEngine(wasmer),
+	}
+
 	appKeepers.WasmKeeper = wasm.NewKeeper(
 		appCodec,
 		appKeepers.keys[wasmtypes.StoreKey],
