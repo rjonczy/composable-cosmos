@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	"github.com/notional-labs/composable/v6/x/stakingmiddleware/types"
 
 	storetypes "cosmossdk.io/store/types"
