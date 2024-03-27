@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wasmkeeper "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/keeper"
 	wasmtypes "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
@@ -32,7 +33,7 @@ type TransferTestSuite struct {
 	chainB *customibctesting.TestChain
 
 	ctx      sdk.Context
-	store    sdk.KVStore
+	store    storetypes.KVStore
 	testData map[string]string
 
 	wasmKeeper wasmkeeper.Keeper
@@ -51,7 +52,7 @@ func (suite *TransferTestSuite) SetupTest() {
 	err = json.Unmarshal(data, &suite.testData)
 	suite.Require().NoError(err)
 
-	suite.ctx = suite.chainB.GetContext().WithBlockGasMeter(sdk.NewInfiniteGasMeter())
+	suite.ctx = suite.chainB.GetContext().WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	suite.store = suite.chainB.App.GetIBCKeeper().ClientKeeper.ClientStore(suite.ctx, "08-wasm-0")
 
 	wasmContract, err := os.ReadFile("../../contracts/ics10_grandpa_cw.wasm")
@@ -59,13 +60,13 @@ func (suite *TransferTestSuite) SetupTest() {
 
 	suite.wasmKeeper = suite.chainB.GetTestSupport().Wasm08Keeper()
 
-	msg := wasmtypes.NewMsgPushNewWasmCode(govAuthorityAddress, wasmContract)
+	msg := wasmtypes.NewMsgStoreCode(govAuthorityAddress, wasmContract)
 
-	response, err := suite.wasmKeeper.PushNewWasmCode(suite.ctx, msg)
+	response, err := suite.wasmKeeper.StoreCode(suite.ctx, msg)
 
 	suite.Require().NoError(err)
-	suite.Require().NotNil(response.CodeId)
-	suite.coordinator.CodeID = response.CodeId
+	suite.Require().NotNil(response.Checksum)
+	suite.coordinator.CodeID = response.Checksum
 }
 
 func TestTransferTestSuite(t *testing.T) {

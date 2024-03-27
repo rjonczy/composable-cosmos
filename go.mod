@@ -217,7 +217,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.6 // indirect
 	cloud.google.com/go/storage v1.36.0 // indirect
-	cosmossdk.io/log v1.3.1 // indirect
+	cosmossdk.io/log v1.3.1
 	github.com/CosmWasm/wasmvm v1.5.2 // indirect; indirect // safe because we're using permissioned cosmwasm
 	github.com/aws/aws-sdk-go v1.45.25 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
@@ -253,11 +253,12 @@ require (
 
 require (
 	cosmossdk.io/api v0.7.3
-	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7 // indirect
+	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/store v1.1.0
 	cosmossdk.io/tools/rosetta v0.2.1
+	cosmossdk.io/x/authz v0.0.0-20240326103109-23723bef2152
 	cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/feegrant v0.1.0
 	cosmossdk.io/x/upgrade v0.1.1

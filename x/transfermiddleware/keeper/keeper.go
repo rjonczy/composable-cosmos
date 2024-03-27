@@ -4,9 +4,9 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -118,7 +118,7 @@ func (keeper Keeper) AddParachainIBCInfoToRemoveList(ctx sdk.Context, nativeDeno
 // IterateRemoveListInfo iterate all parachain token in remove list.
 func (keeper Keeper) IterateRemoveListInfo(ctx sdk.Context, cb func(removeInfo types.RemoveParachainIBCTokenInfo) (stop bool)) {
 	store := ctx.KVStore(keeper.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyParachainIBCTokenRemoveListByNativeDenom)
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyParachainIBCTokenRemoveListByNativeDenom)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -170,7 +170,7 @@ func (keeper Keeper) HasAllowRlyAddress(ctx sdk.Context, rlyAddress string) bool
 func (keeper Keeper) IterateAllowRlyAddress(ctx sdk.Context, cb func(rlyAddress string) (stop bool)) {
 	store := ctx.KVStore(keeper.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyRlyAddress)
-	iterator := sdk.KVStorePrefixIterator(prefixStore, nil)
+	iterator := storetypes.KVStorePrefixIterator(prefixStore, nil)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
