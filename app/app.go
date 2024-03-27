@@ -312,6 +312,7 @@ func NewComposableApp(
 	)
 	app.setupUpgradeStoreLoaders()
 	app.InitNormalKeepers(
+		logger,
 		appCodec,
 		cdc,
 		bApp,
