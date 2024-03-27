@@ -581,14 +581,14 @@ func (app *ComposableApp) GetTxConfig() client.TxConfig {
 }
 
 // BeginBlocker application updates every begin block
-func (app *ComposableApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+func (app *ComposableApp) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
 	BeginBlockForks(ctx, app)
-	return app.mm.BeginBlock(ctx, req)
+	return app.mm.BeginBlock(ctx)
 }
 
 // EndBlocker application updates every end block
-func (app *ComposableApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-	return app.mm.EndBlock(ctx, req)
+func (app *ComposableApp) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
+	return app.mm.EndBlock(ctx)
 }
 
 // InitChainer application update at chain initialization
