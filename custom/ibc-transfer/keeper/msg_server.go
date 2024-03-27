@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	custombankkeeper "github.com/notional-labs/composable/v6/custom/bank/keeper"
 	ibctransfermiddlewaretypes "github.com/notional-labs/composable/v6/x/ibctransfermiddleware/types"
 )
 
@@ -83,7 +85,7 @@ func (k msgServer) Transfer(goCtx context.Context, msg *types.MsgTransfer) (*typ
 				return nil, send_err
 			}
 
-			if newAmount.LTE(sdk.ZeroInt()) {
+			if newAmount.LTE(sdkmath.ZeroInt()) {
 				return &types.MsgTransferResponse{}, nil
 			}
 			msg.Token.Amount = newAmount

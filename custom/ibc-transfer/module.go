@@ -9,6 +9,7 @@ import (
 	ibctransfermodule "github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
 	"github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	custombankkeeper "github.com/notional-labs/composable/v6/custom/bank/keeper"
 	customibctransferkeeper "github.com/notional-labs/composable/v6/custom/ibc-transfer/keeper"
 )
 

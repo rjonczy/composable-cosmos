@@ -3,7 +3,6 @@ package bank
 import (
 	"fmt"
 
-	abcitype "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	stakingmodule "github.com/cosmos/cosmos-sdk/x/staking"
@@ -12,7 +11,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	// custombankkeeper "github.com/notional-labs/composable/v6/custom/bank/keeper"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	customstakingkeeper "github.com/notional-labs/composable/v6/custom/staking/keeper"
 )
 
@@ -56,8 +55,4 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	if err := cfg.RegisterMigration(stakingtypes.ModuleName, 3, m.Migrate3to4); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/staking from version 3 to 4: %v", err))
 	}
-}
-
-func (am AppModule) EndBlock(ctx sdk.Context, _abc abcitype.RequestEndBlock) []abcitype.ValidatorUpdate {
-	return EndBlocker(ctx, &am.keeper)
 }
