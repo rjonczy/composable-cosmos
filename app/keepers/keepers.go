@@ -269,8 +269,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appCodec, appKeepers.keys[ibchost.StoreKey], appKeepers.GetSubspace(ibchost.ModuleName), appKeepers.StakingKeeper, appKeepers.UpgradeKeeper, appKeepers.ScopedIBCKeeper, govModAddress,
 	)
 
-	appKeepers.Wasm08Keeper = wasm08Keeper.NewKeeperWithConfig(appCodec, runtime.NewKVStoreService(appKeepers.keys[wasm08types.StoreKey]), appKeepers.IBCKeeper.ClientKeeper, govModAddress, homePath, &appKeepers.IBCKeeper.ClientKeeper)
-
 	// ICA Host keeper
 	appKeepers.ICAHostKeeper = icahostkeeper.NewKeeper(
 		appCodec, appKeepers.keys[icahosttypes.StoreKey], appKeepers.GetSubspace(icahosttypes.SubModuleName),
@@ -413,16 +411,16 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		wasmkeeper.WithWasmEngine(wasmer),
 	}
 
-	appKeepers.WasmKeeper = wasm.NewKeeper(
+	appKeepers.WasmKeeper = wasmkeeper.NewKeeper(
 		appCodec,
-		appKeepers.keys[wasmtypes.StoreKey],
+		runtime.NewKVStoreService(appKeepers.keys[wasmtypes.StoreKey]),
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.StakingKeeper,
 		distrkeeper.NewQuerier(appKeepers.DistrKeeper),
 		appKeepers.IBCKeeper.ChannelKeeper, // ISC4 Wrapper: fee IBC middleware
 		appKeepers.IBCKeeper.ChannelKeeper,
-		&appKeepers.IBCKeeper.PortKeeper,
+		appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.ScopedWasmKeeper,
 		appKeepers.TransferKeeper.Keeper,
 		bApp.MsgServiceRouter(),
@@ -430,9 +428,12 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		wasmDir,
 		wasmConfig,
 		availableCapabilities,
-		govModuleAuthority,
+		govModAddress,
 		wasmOpts...,
 	)
+
+	// use same VM for wasm
+	appKeepers.Wasm08Keeper = wasm08Keeper.NewKeeperWithVM(appCodec, runtime.NewKVStoreService(appKeepers.keys[wasm08types.StoreKey]), appKeepers.IBCKeeper.ClientKeeper, govModAddress, wasmer, bApp.GRPCQueryRouter())
 
 	appKeepers.Ics20WasmHooks.ContractKeeper = &appKeepers.WasmKeeper
 
