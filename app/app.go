@@ -75,7 +75,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 
 	"cosmossdk.io/x/upgrade"
-	upgradeclient "cosmossdk.io/x/upgrade/client"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v8"
@@ -173,8 +172,6 @@ func getGovProposalHandlers() []govclient.ProposalHandler {
 
 	govProposalHandlers = append(govProposalHandlers,
 		paramsclient.ProposalHandler,
-		upgradeclient.LegacyProposalHandler,
-		upgradeclient.LegacyCancelProposalHandler,
 		ibcclientclient.UpdateClientProposalHandler,
 		ibcclientclient.UpgradeProposalHandler,
 		// this line is used by starport scaffolding # stargate/app/govProposalHandler
