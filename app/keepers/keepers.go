@@ -52,7 +52,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	customstaking "github.com/notional-labs/composable/v6/custom/staking/keeper"
 
-	"cosmossdk.io/x/upgrade"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
@@ -235,8 +234,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appCodec, cdc, runtime.NewKVStoreService(appKeepers.keys[slashingtypes.StoreKey]), appKeepers.StakingKeeper, govModAddress,
 	)
 
-	appKeepers.CrisisKeeper = crisiskeeper.NewKeeper(appCodec, appKeepers.keys[crisistypes.StoreKey],
-		invCheckPeriod, appKeepers.BankKeeper, authtypes.FeeCollectorName, govModAddress,
+	appKeepers.CrisisKeeper = crisiskeeper.NewKeeper(appCodec, runtime.NewKVStoreService(appKeepers.keys[crisistypes.StoreKey]),
+		invCheckPeriod, appKeepers.BankKeeper, authtypes.FeeCollectorName, govModAddress, appKeepers.AccountKeeper.AddressCodec(),
 	)
 
 	groupConfig := group.DefaultConfig()
@@ -273,8 +272,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.ICAHostKeeper = icahostkeeper.NewKeeper(
 		appCodec, appKeepers.keys[icahosttypes.StoreKey], appKeepers.GetSubspace(icahosttypes.SubModuleName),
 		appKeepers.IBCKeeper.ChannelKeeper,
-		appKeepers.IBCKeeper.ChannelKeeper, &appKeepers.IBCKeeper.PortKeeper,
-		appKeepers.AccountKeeper, appKeepers.ScopedICAHostKeeper, bApp.MsgServiceRouter(),
+		appKeepers.IBCKeeper.ChannelKeeper, appKeepers.IBCKeeper.PortKeeper,
+		appKeepers.AccountKeeper, appKeepers.ScopedICAHostKeeper, bApp.MsgServiceRouter(), govModAddress,
 	)
 
 	icaHostStack := icahost.NewIBCModule(appKeepers.ICAHostKeeper)
@@ -302,8 +301,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.keys[transfermiddlewaretypes.StoreKey],
 		appKeepers.GetSubspace(transfermiddlewaretypes.ModuleName),
 		appCodec,
-		&appKeepers.RatelimitKeeper,
-		&appKeepers.TransferKeeper.Keeper,
+		appKeepers.HooksICS4Wrapper,
+		appKeepers.TransferKeeper.Keeper,
 		appKeepers.BankKeeper,
 		authorityAddress,
 	)
@@ -319,23 +318,23 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GetSubspace(ibctransfertypes.ModuleName),
 		&appKeepers.TransferMiddlewareKeeper, // ICS4Wrapper
 		appKeepers.IBCKeeper.ChannelKeeper,
-		&appKeepers.IBCKeeper.PortKeeper,
+		appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.ScopedTransferKeeper,
 		&appKeepers.IbcTransferMiddlewareKeeper,
+		govModAddress,
 	)
 
 	appKeepers.RouterKeeper = routerkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[routertypes.StoreKey],
-		appKeepers.GetSubspace(routertypes.ModuleName),
 		appKeepers.TransferKeeper.Keeper,
 		appKeepers.IBCKeeper.ChannelKeeper,
 		&appKeepers.DistrKeeper,
 		appKeepers.BankKeeper,
-		appKeepers.TransferMiddlewareKeeper,
-		appKeepers.IBCKeeper.ChannelKeeper,
+		&appKeepers.TransferMiddlewareKeeper,
+		govModAddress,
 	)
 
 	appKeepers.RatelimitKeeper = *ratelimitmodulekeeper.NewKeeper(
@@ -354,9 +353,9 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	scopedICQKeeper := appKeepers.CapabilityKeeper.ScopeToModule(icqtypes.ModuleName)
 
 	appKeepers.ICQKeeper = icqkeeper.NewKeeper(
-		appCodec, appKeepers.keys[icqtypes.StoreKey], appKeepers.GetSubspace(icqtypes.ModuleName),
-		appKeepers.IBCKeeper.ChannelKeeper, appKeepers.IBCKeeper.ChannelKeeper, &appKeepers.IBCKeeper.PortKeeper,
-		scopedICQKeeper, bApp,
+		appCodec, appKeepers.keys[icqtypes.StoreKey], &appKeepers.TransferMiddlewareKeeper,
+		appKeepers.IBCKeeper.ChannelKeeper, appKeepers.IBCKeeper.PortKeeper,
+		scopedICQKeeper, bApp.GRPCQueryRouter(), govModAddress,
 	)
 
 	icqIBCModule := icq.NewIBCModule(appKeepers.ICQKeeper)
@@ -377,7 +376,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	// Create evidence Keeper for to register the IBC light client misbehaviour evidence route
 	evidenceKeeper := evidencekeeper.NewKeeper(
-		appCodec, appKeepers.keys[evidencetypes.StoreKey], appKeepers.StakingKeeper, appKeepers.SlashingKeeper,
+		appCodec, runtime.NewKVStoreService(appKeepers.keys[evidencetypes.StoreKey]), appKeepers.StakingKeeper, appKeepers.SlashingKeeper, appKeepers.AccountKeeper.AddressCodec(), runtime.ProvideCometInfoService(),
 	)
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	appKeepers.EvidenceKeeper = *evidenceKeeper
@@ -439,20 +438,18 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	// Register Gov (must be registered after stakeibc)
 	govRouter := govtypesv1beta1.NewRouter()
+	// Register the proposal types
+	// Deprecated: Avoid adding new handlers, instead use the new proposal flow
+	// by granting the governance module the right to execute the message.
+	// See: https://docs.cosmos.network/main/modules/gov#proposal-messages
 	govRouter.AddRoute(govtypes.RouterKey, govtypesv1beta1.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(appKeepers.ParamsKeeper)).
-		// AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(appKeepers.DistrKeeper)).
-		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(appKeepers.UpgradeKeeper)).
 		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(appKeepers.IBCKeeper.ClientKeeper))
 
-	// The gov proposal types can be individually enabled
-	if len(enabledProposals) != 0 {
-		govRouter.AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(appKeepers.WasmKeeper, enabledProposals))
-	}
-
 	govKeeper := *govkeeper.NewKeeper(
-		appCodec, appKeepers.keys[govtypes.StoreKey], appKeepers.AccountKeeper, appKeepers.BankKeeper,
-		appKeepers.StakingKeeper, bApp.MsgServiceRouter(), govtypes.DefaultConfig(), authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		appCodec, runtime.NewKVStoreService(appKeepers.keys[govtypes.StoreKey]), appKeepers.AccountKeeper, appKeepers.BankKeeper,
+		appKeepers.StakingKeeper, appKeepers.DistrKeeper, bApp.MsgServiceRouter(), govtypes.DefaultConfig(),
+		govModAddress,
 	)
 
 	govKeeper.SetLegacyRouter(govRouter)

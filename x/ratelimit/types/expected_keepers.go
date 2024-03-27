@@ -1,6 +1,8 @@
 package types
 
 import (
+	context "context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	"github.com/cosmos/ibc-go/v8/modules/core/exported"
@@ -9,7 +11,7 @@ import (
 // BankKeeper defines the banking contract that must be fulfilled when
 // creating a x/ratelimit keeper.
 type BankKeeper interface {
-	GetSupply(ctx sdk.Context, denom string) sdk.Coin
+	GetSupply(ctx context.Context, denom string) sdk.Coin
 }
 
 // ChannelKeeper defines the channel contract that must be fulfilled when
