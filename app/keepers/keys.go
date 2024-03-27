@@ -40,7 +40,7 @@ import (
 	minttypes "github.com/notional-labs/composable/v6/x/mint/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
-	wasm08types "github.com/cosmos/ibc-go/v8/modules/light-clients/08-wasm/types"
+	wasm08types "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
 
 	// customstakingtypes "github.com/notional-labs/composable/v6/custom/staking/types"
 	stakingmiddleware "github.com/notional-labs/composable/v6/x/stakingmiddleware/types"

@@ -47,7 +47,7 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	"github.com/cosmos/ibc-go/v8/modules/core/types"
 	ibctmtypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
-	wasm08 "github.com/cosmos/ibc-go/v8/modules/light-clients/08-wasm/keeper"
+	wasm08 "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/keeper"
 	ibctesting "github.com/cosmos/ibc-go/v8/testing"
 	"github.com/cosmos/ibc-go/v8/testing/mock"
 	ibctestingtypes "github.com/cosmos/ibc-go/v8/testing/types"

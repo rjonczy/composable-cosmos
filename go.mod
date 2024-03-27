@@ -14,6 +14,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8 v8.0.2
 	github.com/cosmos/ibc-go/v8 v8.1.1
+	github.com/cosmos/ibc-go/modules/light-clients/08-wasm v0.0.0-20240307202658-3f7320cd66dc
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.4
 	github.com/golangci/golangci-lint v1.50.1

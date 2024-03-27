@@ -12,11 +12,11 @@ import (
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
+	wasm08 "github.com/cosmos/ibc-go/modules/light-clients/08-wasm"
+	wasm08keeper "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/keeper"
 	tendermint "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
-	wasm08 "github.com/cosmos/ibc-go/v8/modules/light-clients/08-wasm"
-	wasm08keeper "github.com/cosmos/ibc-go/v8/modules/light-clients/08-wasm/keeper"
 
-	wasm08types "github.com/cosmos/ibc-go/v8/modules/light-clients/08-wasm/types"
+	wasm08types "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"

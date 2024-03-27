@@ -96,8 +96,8 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	wasm08Keeper "github.com/cosmos/ibc-go/v8/modules/light-clients/08-wasm/keeper"
-	wasm08types "github.com/cosmos/ibc-go/v8/modules/light-clients/08-wasm/types"
+	wasm08Keeper "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/keeper"
+	wasm08types "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
 
 	ibc_hooks "github.com/notional-labs/composable/v6/x/ibc-hooks"
 	ibchookskeeper "github.com/notional-labs/composable/v6/x/ibc-hooks/keeper"
