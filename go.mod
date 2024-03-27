@@ -23,7 +23,6 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/cosmos/ibc-apps/modules/async-icq/v8 v8.0.0
 	github.com/stretchr/testify v1.9.0
-	github.com/terra-money/alliance v0.1.1-0.20230419080242-b29b0ec11186
 	golang.org/x/tools v0.6.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20230629202037-9506855d4529
 	google.golang.org/grpc v1.62.1
@@ -221,6 +220,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/tools/rosetta v0.2.1
+	cosmossdk.io/store v1.0.2
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d // indirect
@@ -333,8 +333,5 @@ replace (
 
 	github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.50.5
 
-	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8 => github.com/ComposableFi/ibc-apps/middleware/packet-forward-middleware/v8 v8.0.2-20240320115741-f32994360827
-
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
-	github.com/terra-money/alliance => github.com/notional-labs/alliance v1.0.1-0.20231106184124-5cc1ff759647
 )

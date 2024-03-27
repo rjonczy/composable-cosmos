@@ -36,7 +36,7 @@ import (
 
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 
 	minttypes "github.com/notional-labs/composable/v6/x/mint/types"
 
