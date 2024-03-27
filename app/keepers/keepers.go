@@ -177,7 +177,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	skipUpgradeHeights map[int64]bool,
 	homePath string,
 	appOpts servertypes.AppOptions,
-	wasmOpts []wasm.Option,
 	devnetGov *string,
 ) {
 
@@ -209,9 +208,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 			"centauri14lz7gaw92valqjearnye4shex7zg2p05mlx9q0",
 			"centauri1r2zlh2xn85v8ljmwymnfrnsmdzjl7k6w6lytan",
 			"centauri10556m38z4x6pqalr9rl5ytf3cff8q46nk85k9m",
-
 			// "centauri1wkjvpgkuchq0r8425g4z4sf6n85zj5wtmqzjv9",
-
 			// "centauri1hj5fveer5cjtn4wd6wstzugjfdxzl0xpzxlwgs",
 		})
 
@@ -406,7 +403,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		panic(err)
 	}
 
-	wasmOpts = []wasmkeeper.Option{
+	wasmOpts := []wasmkeeper.Option{
 		wasmkeeper.WithWasmEngine(wasmer),
 	}
 

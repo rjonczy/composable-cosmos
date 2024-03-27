@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -62,10 +61,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group"
 	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
 
+	"cosmossdk.io/log"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
-	"github.com/cometbft/cometbft/libs/log"
 	tmos "github.com/cometbft/cometbft/libs/os"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
@@ -145,23 +144,6 @@ var (
 	Upgrades = []upgrades.Upgrade{v6_5_0.Upgrade}
 	Forks    = []upgrades.Fork{}
 )
-
-// GetEnabledProposals parses the ProposalsEnabled / EnableSpecificProposals values to
-// produce a list of enabled proposals to pass into wasmd app.
-func GetEnabledProposals() []wasm.ProposalType {
-	if EnableSpecificProposals == "" {
-		if ProposalsEnabled == "true" {
-			return wasm.EnableAllProposals
-		}
-		return wasm.DisableAllProposals
-	}
-	chunks := strings.Split(EnableSpecificProposals, ",")
-	proposals, err := wasm.ConvertToProposals(chunks)
-	if err != nil {
-		panic(err)
-	}
-	return proposals
-}
 
 // this line is used by starport scaffolding # stargate/wasm/app/enabledProposals
 
@@ -274,7 +256,6 @@ func NewComposableApp(
 	db dbm.DB,
 	traceStore io.Writer,
 	loadLatest bool,
-	enabledProposals []wasm.ProposalType,
 	skipUpgradeHeights map[int64]bool,
 	homePath string,
 	invCheckPeriod uint,
@@ -321,18 +302,16 @@ func NewComposableApp(
 		skipUpgradeHeights,
 		homePath,
 		appOpts,
-		wasmOpts,
-		enabledProposals,
 		devnetGov,
 	)
 
 	// transferModule := transfer.NewAppModule(app.TransferKeeper)
 	transferModule := customibctransfer.NewAppModule(appCodec, app.TransferKeeper, app.BankKeeper)
-	routerModule := router.NewAppModule(app.RouterKeeper)
+	routerModule := router.NewAppModule(app.RouterKeeper, app.GetSubspace(routertypes.ModuleName))
 	transfermiddlewareModule := transfermiddleware.NewAppModule(&app.TransferMiddlewareKeeper)
 	txBoundaryModule := txBoundary.NewAppModule(appCodec, app.TxBoundaryKeepper)
 	ratelimitModule := ratelimitmodule.NewAppModule(&app.RatelimitKeeper)
-	icqModule := icq.NewAppModule(app.ICQKeeper)
+	icqModule := icq.NewAppModule(app.ICQKeeper, app.GetSubspace(icqtypes.ModuleName))
 	ibcHooksModule := ibc_hooks.NewAppModule()
 	icaModule := ica.NewAppModule(nil, &app.ICAHostKeeper) // Only ICA Host
 	/****  Module Options ****/

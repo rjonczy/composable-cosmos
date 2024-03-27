@@ -5,10 +5,10 @@ import (
 	"io"
 	"os"
 
+	"cosmossdk.io/log"
 	"github.com/CosmWasm/wasmd/x/wasm"
 	dbm "github.com/cometbft/cometbft-db"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
@@ -282,7 +282,6 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 	var emptyWasmOpts []wasm.Option
 	newApp := app.NewComposableApp(
 		logger, db, traceStore, true,
-		app.GetEnabledProposals(),
 		skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
@@ -316,7 +315,6 @@ func (a appCreator) appExport(
 			db,
 			traceStore,
 			false,
-			app.GetEnabledProposals(),
 			map[int64]bool{},
 			homePath,
 			uint(1),
@@ -335,7 +333,6 @@ func (a appCreator) appExport(
 			db,
 			traceStore,
 			true,
-			app.GetEnabledProposals(),
 			map[int64]bool{},
 			homePath,
 			uint(1),
