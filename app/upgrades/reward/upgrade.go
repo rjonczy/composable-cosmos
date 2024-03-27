@@ -3,7 +3,7 @@ package v4
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	mintkeeper "github.com/notional-labs/composable/v6/x/mint/keeper"
 	tfmwkeeper "github.com/notional-labs/composable/v6/x/transfermiddleware/keeper"
