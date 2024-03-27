@@ -14,6 +14,7 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	"github.com/notional-labs/composable/v6/x/ibctransfermiddleware/client/cli"
@@ -89,6 +90,12 @@ type AppModule struct {
 	keeper keeper.Keeper
 }
 
+// IsAppModule implements module.AppModule.
+func (AppModule) IsAppModule() {}
+
+// IsOnePerModuleType implements module.AppModule.
+func (AppModule) IsOnePerModuleType() {}
+
 // NewAppModule creates a new AppModule object. If the InflationCalculationFn
 // argument is nil, then the SDK's default inflation function will be used.
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
@@ -133,11 +140,6 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
-// BeginBlock returns the begin blocker for the staking middleware module.
-func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
-	// BeginBlocker(ctx, am.keeper) ???
-}
-
 // AppModuleSimulation functions
 // GenerateGenesisState creates a randomized GenState of the staking middleware module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {}
@@ -148,7 +150,7 @@ func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedP
 }
 
 // RegisterStoreDecoder registers a decoder for staking middleware module's types.
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
+func (am AppModule) RegisterStoreDecoder(registry simulation.StoreDecoderRegistry) {}
 
 // WeightedOperations doesn't return any staking middleware module operation.
 func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {

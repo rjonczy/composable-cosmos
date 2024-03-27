@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	"github.com/notional-labs/composable/v6/x/ibctransfermiddleware/types"
 
 	storetypes "cosmossdk.io/store/types"
