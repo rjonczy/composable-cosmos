@@ -7,10 +7,12 @@ import (
 	"path/filepath"
 
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
+	"github.com/cosmos/cosmos-sdk/std"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
+	"github.com/cosmos/gogoproto/proto"
 	wasm08 "github.com/cosmos/ibc-go/modules/light-clients/08-wasm"
 	wasm08keeper "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/keeper"
 	tendermint "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
@@ -21,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
@@ -38,11 +41,11 @@ import (
 	"github.com/notional-labs/composable/v6/app/upgrades/v6_5_0"
 
 	// bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-
 	"cosmossdk.io/x/evidence"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	"cosmossdk.io/x/feegrant"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
+	"cosmossdk.io/x/tx/signing"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
@@ -241,12 +244,13 @@ type ComposableApp struct {
 	cdc               *codec.LegacyAmino
 	appCodec          codec.Codec
 	interfaceRegistry types.InterfaceRegistry
+	txConfig          client.TxConfig
+	invCheckPeriod    uint
 
-	invCheckPeriod uint
-
-	mm           *module.Manager
-	sm           *module.SimulationManager
-	configurator module.Configurator
+	mm                *module.Manager
+	basicModuleManger module.BasicManager
+	sm                *module.SimulationManager
+	configurator      module.Configurator
 }
 
 // RUN GOSEC
@@ -265,22 +269,43 @@ func NewComposableApp(
 	devnetGov *string,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *ComposableApp {
-	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino
-	interfaceRegistry := encodingConfig.InterfaceRegistry
+	interfaceRegistry, err := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
+		ProtoFiles: proto.HybridResolver,
+		SigningOptions: signing.Options{
+			AddressCodec: address.Bech32Codec{
+				Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
+			},
+			ValidatorAddressCodec: address.Bech32Codec{
+				Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
+			},
+		},
+	})
+
+	if err != nil {
+		panic(err)
+	}
+
+	appCodec := codec.NewProtoCodec(interfaceRegistry)
+	legacyAmino := codec.NewLegacyAmino()
+	txConfig := authtx.NewTxConfig(appCodec, authtx.DefaultSignModes)
+
+	std.RegisterLegacyAminoCodec(legacyAmino)
+	std.RegisterInterfaces(interfaceRegistry)
 
 	bApp := baseapp.NewBaseApp(Name, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
-	bApp.SetTxEncoder(encodingConfig.TxConfig.TxEncoder())
+	bApp.SetTxEncoder(txConfig.TxEncoder())
 
 	app := &ComposableApp{
 		BaseApp:           bApp,
 		AppKeepers:        keepers.AppKeepers{},
-		cdc:               cdc,
+		cdc:               legacyAmino,
 		appCodec:          appCodec,
 		interfaceRegistry: interfaceRegistry,
 		invCheckPeriod:    invCheckPeriod,
+		txConfig:          txConfig,
 	}
 
 	app.InitSpecialKeepers(
@@ -360,6 +385,10 @@ func NewComposableApp(
 		ratelimitModule,
 		// this line is used by starport scaffolding # stargate/app/appModule
 	)
+
+	app.basicModuleManger = ModuleBasics
+	app.basicModuleManger.RegisterLegacyAminoCodec(legacyAmino)
+	app.basicModuleManger.RegisterInterfaces(interfaceRegistry)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
