@@ -3,7 +3,6 @@ package main
 import (
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 
 	"github.com/cosmos/ibc-go/v8/testing/simapp"
@@ -14,12 +13,13 @@ func main() {
 	rootCmd := cmd.NewRootCmd()
 
 	if err := svrcmd.Execute(rootCmd, "simd", simapp.DefaultNodeHome); err != nil {
-		switch e := err.(type) {
-		case server.ErrorCode:
-			os.Exit(e.Code)
+		os.Exit(1)
+		// switch e := err.(type) {
+		// case Error:
+		// 	os.Exit(e)
 
-		default:
-			os.Exit(1)
-		}
+		// default:
+		// 	os.Exit(1)
+		// }
 	}
 }

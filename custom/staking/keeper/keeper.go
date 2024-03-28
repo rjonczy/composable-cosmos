@@ -148,6 +148,8 @@ func (k *Keeper) RegisterKeepers(dk distkeeper.Keeper, mk mintkeeper.Keeper) {
 
 // SlashWithInfractionReason send coins to community pool
 func (k Keeper) SlashWithInfractionReason(ctx context.Context, consAddr sdk.ConsAddress, infractionHeight, power int64, slashFactor math.LegacyDec, _ types.Infraction) (math.Int, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
 	// keep slashing logic the same
 	amountBurned, err := k.Slash(ctx, consAddr, infractionHeight, power, slashFactor)
 	if err != nil {
@@ -161,7 +163,7 @@ func (k Keeper) SlashWithInfractionReason(ctx context.Context, consAddr sdk.Cons
 	}
 
 	coins := sdk.NewCoins(sdk.NewCoin(denom, amountBurned))
-	err = k.mintKeeper.MintCoins(ctx, coins)
+	err = k.mintKeeper.MintCoins(sdkCtx, coins)
 	if err != nil {
 		k.Logger(ctx).Error("Failed to mint slashed coins: ", amountBurned)
 	} else {
@@ -169,7 +171,7 @@ func (k Keeper) SlashWithInfractionReason(ctx context.Context, consAddr sdk.Cons
 		if err != nil {
 			k.Logger(ctx).Error(fmt.Sprintf("Failed to fund community pool. Tokens minted to the staking module account: %d. ", amountBurned))
 		} else {
-			ctx.EventManager().EmitEvent(
+			sdkCtx.EventManager().EmitEvent(
 				sdk.NewEvent(
 					minttypes.EventTypeMintSlashed,
 					sdk.NewAttribute(sdk.AttributeKeyAmount, amountBurned.String()),

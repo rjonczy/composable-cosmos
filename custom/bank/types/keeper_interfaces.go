@@ -11,5 +11,5 @@ type StakingKeeper interface {
 }
 
 type TransferMiddlewareKeeper interface {
-	GetTotalEscrowedToken(ctx context.Context) (coins sdk.Coins)
+	GetTotalEscrowedToken(ctx sdk.Context) (coins sdk.Coins)
 }
