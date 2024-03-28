@@ -429,7 +429,13 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 
 	// use same VM for wasm
-	appKeepers.Wasm08Keeper = wasm08Keeper.NewKeeperWithVM(appCodec, runtime.NewKVStoreService(appKeepers.keys[wasm08types.StoreKey]), appKeepers.IBCKeeper.ClientKeeper, govModAddress, wasmer, bApp.GRPCQueryRouter())
+	appKeepers.Wasm08Keeper = wasm08Keeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(appKeepers.keys[wasm08types.StoreKey]),
+		govModAddress,
+		wasmDir,
+		&appKeepers.IBCKeeper.ClientKeeper,
+		bApp.GRPCQueryRouter())
 
 	appKeepers.Ics20WasmHooks.ContractKeeper = &appKeepers.WasmKeeper
 
