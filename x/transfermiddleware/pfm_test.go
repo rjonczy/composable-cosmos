@@ -6,11 +6,12 @@ import (
 	"testing"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	"github.com/stretchr/testify/suite"
 
 	customibctesting "github.com/notional-labs/composable/v6/app/ibctesting"
@@ -89,7 +90,7 @@ func RandomBech32AccountAddress(tb testing.TB) string {
 
 func (suite *TransferMiddlewareTestSuite) TestTransferWithPFM_ErrorAck() {
 	var (
-		transferAmount = sdk.NewInt(1000000000)
+		transferAmount = sdkmath.NewInt(1000000000)
 		timeoutHeight  = clienttypes.NewHeight(1, 110)
 		pathAtoB       *customibctesting.Path
 		pathBtoC       *customibctesting.Path
@@ -121,7 +122,7 @@ func (suite *TransferMiddlewareTestSuite) TestTransferWithPFM_ErrorAck() {
 	testAcc := RandomAccountAddress(suite.T())
 	timeOut := 10 * time.Minute
 	retries := uint8(0)
-	// Build MEMOtransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	// Build MEMOtransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	memo := PacketMetadata{
 		Forward: &ForwardMetadata{
 			Receiver: testAcc.String(),
@@ -234,7 +235,7 @@ func (suite *TransferMiddlewareTestSuite) TestTransferWithPFM_ErrorAck() {
 
 func (suite *TransferMiddlewareTestSuite) TestTransferWithPFM() {
 	var (
-		transferAmount = sdk.NewInt(1000000000)
+		transferAmount = sdkmath.NewInt(1000000000)
 		// when transfer via sdk transfer from A (module) -> B (contract)
 		timeoutHeight = clienttypes.NewHeight(1, 110)
 		pathAtoB      *customibctesting.Path
@@ -388,7 +389,7 @@ func (suite *TransferMiddlewareTestSuite) TestTransferWithPFM() {
 
 func (suite *TransferMiddlewareTestSuite) TestTransferWithPFMReverse_ErrorAck() {
 	var (
-		transferAmount = sdk.NewInt(1000000000)
+		transferAmount = sdkmath.NewInt(1000000000)
 		// when transfer via sdk transfer from A (module) -> B (contract)
 		timeoutHeight = clienttypes.NewHeight(1, 110)
 		pathAtoB      *customibctesting.Path
@@ -660,7 +661,7 @@ func (suite *TransferMiddlewareTestSuite) TestTransferWithPFMReverse_ErrorAck() 
 
 func (suite *TransferMiddlewareTestSuite) TestTransferWithPFMReverse() {
 	var (
-		transferAmount = sdk.NewInt(1000000000)
+		transferAmount = sdkmath.NewInt(1000000000)
 		// when transfer via sdk transfer from A (module) -> B (contract)
 		timeoutHeight = clienttypes.NewHeight(1, 110)
 		pathAtoB      *customibctesting.Path

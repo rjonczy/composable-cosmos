@@ -2,19 +2,16 @@ package helpers
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 	"time"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
-	tmrand "github.com/cometbft/cometbft/libs/rand"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmtypes "github.com/cometbft/cometbft/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -24,7 +21,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/ibc-go/v7/testing/mock"
+	"github.com/cosmos/ibc-go/v8/testing/mock"
 	"github.com/stretchr/testify/require"
 
 	composable "github.com/notional-labs/composable/v6/app"
@@ -59,10 +56,7 @@ type EmptyAppOptions struct{}
 func (EmptyAppOptions) Get(_ string) interface{} { return nil }
 
 func NewContextForApp(app composable.ComposableApp) sdk.Context {
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{
-		ChainID: fmt.Sprintf("test-chain-%s", tmrand.Str(4)),
-		Height:  1,
-	})
+	ctx := app.BaseApp.NewContext(false)
 	return ctx
 }
 
@@ -76,7 +70,7 @@ func Setup(t *testing.T, isCheckTx bool, invCheckPeriod uint) *composable.Compos
 
 		// Initialize the chain
 		app.InitChain(
-			abci.RequestInitChain{
+			&abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
@@ -95,13 +89,13 @@ func setup(withGenesis bool, invCheckPeriod uint, opts ...wasm.Option) (*composa
 		db,
 		nil,
 		true,
-		wasmtypes.EnableAllProposals,
 		map[int64]bool{},
 		composable.DefaultNodeHome,
 		invCheckPeriod,
 		encCdc,
 		EmptyAppOptions{},
 		opts,
+		nil,
 	)
 	if withGenesis {
 		return app, composable.NewDefaultGenesisState()
@@ -125,7 +119,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 
 	// init chain will set the validator set and initialize the genesis accounts
 	app.InitChain(
-		abci.RequestInitChain{
+		&abci.RequestInitChain{
 			ChainId:         chainID,
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: DefaultConsensusParams,
@@ -136,15 +130,14 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	// commit genesis changes
 	// app.BaseApp.Set
 	app.Commit()
-	app.BeginBlock(
-		abci.RequestBeginBlock{
-			Header: tmproto.Header{
-				ChainID:            chainID,
-				Height:             app.LastBlockHeight() + 1,
-				AppHash:            app.LastCommitID().Hash,
-				ValidatorsHash:     valSet.Hash(),
-				NextValidatorsHash: valSet.Hash(),
-			},
+	//* (baseapp) [#15519](https://github.com/cosmos/cosmos-sdk/pull/15519/files) BeginBlock and EndBlock are now internal to baseapp. For testing, user must call `FinalizeBlock`. BeginBlock and EndBlock calls are internal to Baseapp.
+	app.FinalizeBlock(
+		&abci.RequestFinalizeBlock{
+			// ChainID:            chainID,
+			Height: app.LastBlockHeight() + 1,
+			// AppHash:            app.LastCommitID().Hash,
+			// ValidatorsHash:     valSet.Hash(),
+			NextValidatorsHash: valSet.Hash(),
 		},
 	)
 
@@ -165,7 +158,7 @@ func SetupComposableAppWithValSet(t *testing.T) *composable.ComposableApp {
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
-	amount, ok := sdk.NewIntFromString("10000000000000000000")
+	amount, ok := math.NewIntFromString("10000000000000000000")
 	require.True(t, ok)
 
 	balance := banktypes.Balance{
@@ -191,7 +184,7 @@ func SetupComposableAppWithValSetWithGenAccout(t *testing.T) (*composable.Compos
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
-	amount, ok := sdk.NewIntFromString("10000000000000000000")
+	amount, ok := math.NewIntFromString("10000000000000000000")
 	require.True(t, ok)
 
 	balance := banktypes.Balance{

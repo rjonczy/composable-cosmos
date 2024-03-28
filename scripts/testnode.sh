@@ -13,20 +13,20 @@ TRACE=""
 # remove existing daemon
 rm -rf ~/.banksy*
 
-centaurid config keyring-backend $KEYRING
-centaurid config chain-id $CHAINID
+# centaurid config keyring-backend $KEYRING
+# centaurid config chain-id $CHAINID
 
 # if $KEY exists it should be deleted
 echo "decorate bright ozone fork gallery riot bus exhaust worth way bone indoor calm squirrel merry zero scheme cotton until shop any excess stage laundry" | centaurid keys add $KEY --keyring-backend $KEYRING --algo $KEYALGO --recover
 
-centaurid init $MONIKER --chain-id $CHAINID 
+centaurid init $MONIKER --chain-id $CHAINID > /dev/null 2>&1
+
 
 # Allocate genesis accounts (cosmos formatted addresses)
-centaurid add-genesis-account $KEY 100000000000000000000000000stake --keyring-backend $KEYRING
+centaurid genesis add-genesis-account $KEY 100000000000000000000000000stake --keyring-backend $KEYRING
 
 # Sign genesis transaction
-centaurid gentx $KEY 1000000000000000000000stake --keyring-backend $KEYRING --chain-id $CHAINID
-
+centaurid genesis gentx $KEY 1000000000000000000000stake --keyring-backend $KEYRING --chain-id $CHAINID
 # Collect genesis tx
 centaurid collect-gentxs
 

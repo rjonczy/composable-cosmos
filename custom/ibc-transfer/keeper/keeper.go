@@ -2,13 +2,13 @@ package keeper
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
-	"github.com/cosmos/ibc-go/v7/modules/core/exported"
+	"github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
+	"github.com/cosmos/ibc-go/v8/modules/core/exported"
 	ibctransfermiddleware "github.com/notional-labs/composable/v6/x/ibctransfermiddleware/keeper"
 )
 
@@ -29,9 +29,10 @@ func NewKeeper(
 	bk types.BankKeeper,
 	scopedKeeper exported.ScopedKeeper,
 	ibcTransfermiddleware *ibctransfermiddleware.Keeper,
+	authority string,
 ) Keeper {
 	keeper := Keeper{
-		Keeper:                ibctransferkeeper.NewKeeper(cdc, key, paramSpace, ics4Wrapper, channelKeeper, portKeeper, authKeeper, bk, scopedKeeper),
+		Keeper:                ibctransferkeeper.NewKeeper(cdc, key, paramSpace, ics4Wrapper, channelKeeper, portKeeper, authKeeper, bk, scopedKeeper, authority),
 		IbcTransfermiddleware: ibcTransfermiddleware,
 		cdc:                   cdc,
 	}

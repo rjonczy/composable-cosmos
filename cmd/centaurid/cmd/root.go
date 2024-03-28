@@ -5,10 +5,10 @@ import (
 	"io"
 	"os"
 
+	"cosmossdk.io/log"
 	"github.com/CosmWasm/wasmd/x/wasm"
-	dbm "github.com/cometbft/cometbft-db"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
-	"github.com/cometbft/cometbft/libs/log"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
@@ -33,9 +33,15 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/notional-labs/composable/v6/app"
 	// "github.com/notional-labs/composable/v6/app/params"
 	// this line is used by starport scaffolding # stargate/root/import
+)
+
+const (
+	// if set, than uses specific key for governance instead of default (default is production; this override for local devtest)
+	flagDevnetGov = "devnet-gov"
 )
 
 var ChainID string
@@ -75,7 +81,6 @@ func NewRootCmd() (*cobra.Command, app.EncodingConfig) {
 			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
 				return err
 			}
-
 			customAppTemplate, customAppConfig := initAppConfig()
 
 			customTMConfig := initTendermintConfig()
@@ -138,7 +143,6 @@ func initAppConfig() (string, interface{}) {
 	srvCfg.MinGasPrices = ""
 	srvCfg.API.Enable = true
 	srvCfg.API.EnableUnsafeCORS = true
-	srvCfg.GRPCWeb.EnableUnsafeCORS = true
 	srvCfg.MinGasPrices = "0stake"
 
 	// This ensures that upgraded nodes will use iavl fast node.
@@ -171,33 +175,34 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig app.EncodingConfig) {
 
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, gentxModule.GenTxValidator),
-		genutilcli.MigrateGenesisCmd(),
-		genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
+		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, gentxModule.GenTxValidator, encodingConfig.TxConfig.SigningContext().ValidatorAddressCodec()),
+		genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, encodingConfig.TxConfig.SigningContext().ValidatorAddressCodec()),
 		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
 		AddGenesisAccountCmd(app.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		addDebugCommands(debug.Cmd()),
 		debug.Cmd(),
-		config.Cmd(),
 		CovertPrefixAddr(),
+		vestingcli.GetTxCmd(encodingConfig.TxConfig.SigningContext().AddressCodec()),
 		// this line is used by starport scaffolding # stargate/root/commands
 	)
 
-	a := appCreator{encodingConfig}
-	server.AddCommands(rootCmd, app.DefaultNodeHome, a.newApp, a.appExport, addModuleInitFlags)
+	appCreator := appCreator{encodingConfig}
+	server.AddCommands(rootCmd, app.DefaultNodeHome, appCreator.newApp, appCreator.appExport, addModuleInitFlags)
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
-		rpc.StatusCommand(),
+		server.StatusCommand(),
+		genesisCommand(encodingConfig.TxConfig, app.ModuleBasics),
 		queryCommand(),
 		txCommand(),
-		keys.Commands(app.DefaultNodeHome),
+		keys.Commands(),
 	)
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
+	startCmd.Flags().String(flagDevnetGov, "", "Sets the devnet governance key (if not set, uses the default production key)")
 	// this line is used by starport scaffolding # stargate/root/initFlags
 }
 
@@ -212,11 +217,12 @@ func queryCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		authcmd.GetAccountCmd(),
-		rpc.ValidatorCommand(),
-		rpc.BlockCommand(),
+		rpc.QueryEventForTxCmd(),
+		server.QueryBlockCmd(),
 		authcmd.QueryTxsByEventsCmd(),
+		server.QueryBlocksCmd(),
 		authcmd.QueryTxCmd(),
+		server.QueryBlockResultsCmd(),
 	)
 
 	app.ModuleBasics.AddQueryCommands(cmd)
@@ -244,11 +250,8 @@ func txCommand() *cobra.Command {
 		authcmd.GetEncodeCommand(),
 		authcmd.GetDecodeCommand(),
 		flags.LineBreak,
-		vestingcli.GetTxCmd(),
 	)
 
-	app.ModuleBasics.AddTxCommands(cmd)
-	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 	return cmd
 }
 
@@ -267,12 +270,16 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		skipUpgradeHeights[h] = true
 	}
 
+	var devnetGov *string
+	devnetGovOption, _ := appOpts.Get(flagDevnetGov).(string)
+	if devnetGovOption != "" {
+		devnetGov = &devnetGovOption
+	}
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
 
 	var emptyWasmOpts []wasm.Option
 	newApp := app.NewComposableApp(
 		logger, db, traceStore, true,
-		app.GetEnabledProposals(),
 		skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
@@ -280,6 +287,7 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		// this line is used by starport scaffolding # stargate/root/appArgument
 		appOpts,
 		emptyWasmOpts,
+		devnetGov,
 		baseappOptions...,
 	)
 
@@ -305,13 +313,13 @@ func (a appCreator) appExport(
 			db,
 			traceStore,
 			false,
-			app.GetEnabledProposals(),
 			map[int64]bool{},
 			homePath,
 			uint(1),
 			a.encCfg,
 			appOpts,
 			emptyWasmOpts,
+			nil,
 		)
 
 		if err := anApp.LoadHeight(height); err != nil {
@@ -323,15 +331,24 @@ func (a appCreator) appExport(
 			db,
 			traceStore,
 			true,
-			app.GetEnabledProposals(),
 			map[int64]bool{},
 			homePath,
 			uint(1),
 			a.encCfg,
 			appOpts,
 			emptyWasmOpts,
+			nil,
 		)
 	}
 
 	return anApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
+}
+
+func genesisCommand(txConfig client.TxConfig, basicManager module.BasicManager, cmds ...*cobra.Command) *cobra.Command {
+	cmd := genutilcli.Commands(txConfig, basicManager, app.DefaultNodeHome)
+
+	for _, subCmd := range cmds {
+		cmd.AddCommand(subCmd)
+	}
+	return cmd
 }

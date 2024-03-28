@@ -1,9 +1,12 @@
 package v6_5_0
 
 import (
+	"context"
+
+	sdkmath "cosmossdk.io/math"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/notional-labs/composable/v6/app/keepers"
@@ -18,16 +21,17 @@ func CreateUpgradeHandler(
 	_ codec.Codec,
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+	return func(ctx context.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		sdkctx := sdk.UnwrapSDKContext(ctx)
 		custommiddlewareparams := ibctransfermiddleware.DefaultGenesisState()
-		keepers.IbcTransferMiddlewareKeeper.SetParams(ctx, custommiddlewareparams.Params)
+		keepers.IbcTransferMiddlewareKeeper.SetParams(sdkctx, custommiddlewareparams.Params)
 
 		// remove broken proposals
 		BrokenProposals := [3]uint64{2, 6, 11}
 		for _, proposal_id := range BrokenProposals {
-			_, ok := keepers.GovKeeper.GetProposal(ctx, proposal_id)
-			if ok {
-				keepers.GovKeeper.DeleteProposal(ctx, proposal_id)
+			_, err := keepers.GovKeeper.Proposals.Get(sdkctx, proposal_id)
+			if err != nil {
+				keepers.GovKeeper.DeleteProposal(sdkctx, proposal_id)
 			}
 
 		}
@@ -36,7 +40,7 @@ func CreateUpgradeHandler(
 		// this ppica is unused because it is a native token stored in escrow account
 		// it was unnecessarily minted to match pica escrowed on picasso to ppica minted
 		// in genesis, to make initial native ppica transferrable to picasso
-		amount, ok := sdk.NewIntFromString("1066669217167120000000")
+		amount, ok := sdkmath.NewIntFromString("1066669217167120000000")
 		if ok {
 			coins := sdk.Coins{sdk.NewCoin("ppica", amount)}
 			keepers.BankKeeper.SendCoinsFromAccountToModule(ctx, sdk.MustAccAddressFromBech32("centauri12k2pyuylm9t7ugdvz67h9pg4gmmvhn5vmvgw48"), "gov", coins)

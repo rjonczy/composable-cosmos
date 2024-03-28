@@ -5,23 +5,25 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
+	"github.com/cosmos/cosmos-sdk/std"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
-	tendermint "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
-	wasm08 "github.com/cosmos/ibc-go/v7/modules/light-clients/08-wasm"
-	wasm08keeper "github.com/cosmos/ibc-go/v7/modules/light-clients/08-wasm/keeper"
+	"github.com/cosmos/gogoproto/proto"
+	wasm08 "github.com/cosmos/ibc-go/modules/light-clients/08-wasm"
+	wasm08keeper "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/keeper"
+	tendermint "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 
-	wasm08types "github.com/cosmos/ibc-go/v7/modules/light-clients/08-wasm/types"
+	wasm08types "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
@@ -39,34 +41,34 @@ import (
 	"github.com/notional-labs/composable/v6/app/upgrades/v6_5_0"
 
 	// bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-
+	"cosmossdk.io/x/evidence"
+	evidencetypes "cosmossdk.io/x/evidence/types"
+	"cosmossdk.io/x/feegrant"
+	feegrantmodule "cosmossdk.io/x/feegrant/module"
+	"cosmossdk.io/x/tx/signing"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/capability"
-	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
-	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/ibc-go/modules/capability"
+	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
+	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 
 	"github.com/cosmos/cosmos-sdk/x/group"
 	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
 
-	dbm "github.com/cometbft/cometbft-db"
+	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
-	"github.com/cometbft/cometbft/libs/log"
 	tmos "github.com/cometbft/cometbft/libs/os"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -74,30 +76,25 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 
+	"cosmossdk.io/x/upgrade"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/cosmos-sdk/x/upgrade"
-	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
-	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
-	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
-	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v7/modules/core"
-	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
-	ibchost "github.com/cosmos/ibc-go/v7/modules/core/exported"
-	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+	icq "github.com/cosmos/ibc-apps/modules/async-icq/v8"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
+	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
+	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v8/modules/core"
+	ibchost "github.com/cosmos/ibc-go/v8/modules/core/exported"
+	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	customibctransfer "github.com/notional-labs/composable/v6/custom/ibc-transfer"
 	customstaking "github.com/notional-labs/composable/v6/custom/staking"
 	"github.com/spf13/cast"
-	icq "github.com/strangelove-ventures/async-icq/v7"
-	icqtypes "github.com/strangelove-ventures/async-icq/v7/types"
 
-	router "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward"
-	routertypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward/types"
-	alliancemodule "github.com/terra-money/alliance/x/alliance"
-	alliancemoduleclient "github.com/terra-money/alliance/x/alliance/client"
-	alliancemoduletypes "github.com/terra-money/alliance/x/alliance/types"
+	router "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward"
+	routertypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward/types"
 
 	custombankmodule "github.com/notional-labs/composable/v6/custom/bank"
 
@@ -118,7 +115,7 @@ import (
 	"github.com/notional-labs/composable/v6/x/mint"
 	minttypes "github.com/notional-labs/composable/v6/x/mint/types"
 
-	ibctestingtypes "github.com/cosmos/ibc-go/v7/testing/types"
+	ibctestingtypes "github.com/cosmos/ibc-go/v8/testing/types"
 
 	ibc_hooks "github.com/notional-labs/composable/v6/x/ibc-hooks"
 	ibchookstypes "github.com/notional-labs/composable/v6/x/ibc-hooks/types"
@@ -151,23 +148,6 @@ var (
 	Forks    = []upgrades.Fork{}
 )
 
-// GetEnabledProposals parses the ProposalsEnabled / EnableSpecificProposals values to
-// produce a list of enabled proposals to pass into wasmd app.
-func GetEnabledProposals() []wasm.ProposalType {
-	if EnableSpecificProposals == "" {
-		if ProposalsEnabled == "true" {
-			return wasm.EnableAllProposals
-		}
-		return wasm.DisableAllProposals
-	}
-	chunks := strings.Split(EnableSpecificProposals, ",")
-	proposals, err := wasm.ConvertToProposals(chunks)
-	if err != nil {
-		panic(err)
-	}
-	return proposals
-}
-
 // this line is used by starport scaffolding # stargate/wasm/app/enabledProposals
 
 func getGovProposalHandlers() []govclient.ProposalHandler {
@@ -176,13 +156,6 @@ func getGovProposalHandlers() []govclient.ProposalHandler {
 
 	govProposalHandlers = append(govProposalHandlers,
 		paramsclient.ProposalHandler,
-		upgradeclient.LegacyProposalHandler,
-		upgradeclient.LegacyCancelProposalHandler,
-		ibcclientclient.UpdateClientProposalHandler,
-		ibcclientclient.UpgradeProposalHandler,
-		alliancemoduleclient.CreateAllianceProposalHandler,
-		alliancemoduleclient.UpdateAllianceProposalHandler,
-		alliancemoduleclient.DeleteAllianceProposalHandler,
 		// this line is used by starport scaffolding # stargate/app/govProposalHandler
 	)
 
@@ -227,7 +200,6 @@ var (
 		txBoundary.AppModuleBasic{},
 		ratelimitmodule.AppModuleBasic{},
 		consensus.AppModuleBasic{},
-		alliancemodule.AppModuleBasic{},
 		stakingmiddleware.AppModuleBasic{},
 		ibctransfermiddleware.AppModuleBasic{},
 		// this line is used by starport scaffolding # stargate/app/moduleBasic
@@ -238,15 +210,13 @@ var (
 		authtypes.FeeCollectorName: nil,
 		distrtypes.ModuleName:      nil,
 		// mint module needs burn access to remove excess validator tokens (it overallocates, then burns)
-		minttypes.ModuleName:                {authtypes.Minter},
-		stakingtypes.BondedPoolName:         {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName:      {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:                 {authtypes.Burner},
-		transfermiddlewaretypes.ModuleName:  {authtypes.Minter, authtypes.Burner},
-		ibctransfertypes.ModuleName:         {authtypes.Minter, authtypes.Burner},
-		alliancemoduletypes.ModuleName:      {authtypes.Minter, authtypes.Burner},
-		alliancemoduletypes.RewardsPoolName: nil,
-		icatypes.ModuleName:                 nil,
+		minttypes.ModuleName:               {authtypes.Minter},
+		stakingtypes.BondedPoolName:        {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:     {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:                {authtypes.Burner},
+		transfermiddlewaretypes.ModuleName: {authtypes.Minter, authtypes.Burner},
+		ibctransfertypes.ModuleName:        {authtypes.Minter, authtypes.Burner},
+		icatypes.ModuleName:                nil,
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 )
@@ -274,12 +244,13 @@ type ComposableApp struct {
 	cdc               *codec.LegacyAmino
 	appCodec          codec.Codec
 	interfaceRegistry types.InterfaceRegistry
+	txConfig          client.TxConfig
+	invCheckPeriod    uint
 
-	invCheckPeriod uint
-
-	mm           *module.Manager
-	sm           *module.SimulationManager
-	configurator module.Configurator
+	mm                *module.Manager
+	basicModuleManger module.BasicManager
+	sm                *module.SimulationManager
+	configurator      module.Configurator
 }
 
 // RUN GOSEC
@@ -289,31 +260,52 @@ func NewComposableApp(
 	db dbm.DB,
 	traceStore io.Writer,
 	loadLatest bool,
-	enabledProposals []wasm.ProposalType,
 	skipUpgradeHeights map[int64]bool,
 	homePath string,
 	invCheckPeriod uint,
 	encodingConfig EncodingConfig,
 	appOpts servertypes.AppOptions,
 	wasmOpts []wasm.Option,
+	devnetGov *string,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *ComposableApp {
-	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino
-	interfaceRegistry := encodingConfig.InterfaceRegistry
+	interfaceRegistry, err := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
+		ProtoFiles: proto.HybridResolver,
+		SigningOptions: signing.Options{
+			AddressCodec: address.Bech32Codec{
+				Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
+			},
+			ValidatorAddressCodec: address.Bech32Codec{
+				Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
+			},
+		},
+	})
+
+	if err != nil {
+		panic(err)
+	}
+
+	appCodec := codec.NewProtoCodec(interfaceRegistry)
+	legacyAmino := codec.NewLegacyAmino()
+	txConfig := authtx.NewTxConfig(appCodec, authtx.DefaultSignModes)
+
+	std.RegisterLegacyAminoCodec(legacyAmino)
+	std.RegisterInterfaces(interfaceRegistry)
 
 	bApp := baseapp.NewBaseApp(Name, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
-	bApp.SetTxEncoder(encodingConfig.TxConfig.TxEncoder())
+	bApp.SetTxEncoder(txConfig.TxEncoder())
 
 	app := &ComposableApp{
 		BaseApp:           bApp,
 		AppKeepers:        keepers.AppKeepers{},
-		cdc:               cdc,
+		cdc:               legacyAmino,
 		appCodec:          appCodec,
 		interfaceRegistry: interfaceRegistry,
 		invCheckPeriod:    invCheckPeriod,
+		txConfig:          txConfig,
 	}
 
 	app.InitSpecialKeepers(
@@ -326,6 +318,7 @@ func NewComposableApp(
 	)
 	app.setupUpgradeStoreLoaders()
 	app.InitNormalKeepers(
+		logger,
 		appCodec,
 		cdc,
 		bApp,
@@ -334,17 +327,16 @@ func NewComposableApp(
 		skipUpgradeHeights,
 		homePath,
 		appOpts,
-		wasmOpts,
-		enabledProposals,
+		devnetGov,
 	)
 
 	// transferModule := transfer.NewAppModule(app.TransferKeeper)
 	transferModule := customibctransfer.NewAppModule(appCodec, app.TransferKeeper, app.BankKeeper)
-	routerModule := router.NewAppModule(app.RouterKeeper)
+	routerModule := router.NewAppModule(app.RouterKeeper, app.GetSubspace(routertypes.ModuleName))
 	transfermiddlewareModule := transfermiddleware.NewAppModule(&app.TransferMiddlewareKeeper)
 	txBoundaryModule := txBoundary.NewAppModule(appCodec, app.TxBoundaryKeepper)
 	ratelimitModule := ratelimitmodule.NewAppModule(&app.RatelimitKeeper)
-	icqModule := icq.NewAppModule(app.ICQKeeper)
+	icqModule := icq.NewAppModule(app.ICQKeeper, app.GetSubspace(icqtypes.ModuleName))
 	ibcHooksModule := ibc_hooks.NewAppModule()
 	icaModule := ica.NewAppModule(nil, &app.ICAHostKeeper) // Only ICA Host
 	/****  Module Options ****/
@@ -358,7 +350,7 @@ func NewComposableApp(
 
 	app.mm = module.NewManager(
 		genutil.NewAppModule(
-			app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx,
+			app.AccountKeeper, app.StakingKeeper, app,
 			encodingConfig.TxConfig,
 		),
 		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
@@ -370,13 +362,13 @@ func NewComposableApp(
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)),
 		gov.NewAppModule(appCodec, &app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
 		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper, nil),
-		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName)),
+		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName), app.interfaceRegistry),
 		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(distrtypes.ModuleName)),
 		customstaking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
 		stakingmiddleware.NewAppModule(appCodec, app.StakingMiddlewareKeeper),
 		ibctransfermiddleware.NewAppModule(appCodec, app.IbcTransferMiddlewareKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		upgrade.NewAppModule(app.UpgradeKeeper),
+		upgrade.NewAppModule(app.UpgradeKeeper, app.AccountKeeper.AddressCodec()),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
@@ -391,9 +383,12 @@ func NewComposableApp(
 		txBoundaryModule,
 		icaModule,
 		ratelimitModule,
-		alliancemodule.NewAppModule(appCodec, app.AllianceKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		// this line is used by starport scaffolding # stargate/app/appModule
 	)
+
+	app.basicModuleManger = ModuleBasics
+	app.basicModuleManger.RegisterLegacyAminoCodec(legacyAmino)
+	app.basicModuleManger.RegisterInterfaces(interfaceRegistry)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
@@ -429,7 +424,6 @@ func NewComposableApp(
 		wasm08types.ModuleName,
 		icatypes.ModuleName,
 		wasm.ModuleName,
-		alliancemoduletypes.ModuleName,
 		stakingmiddlewaretypes.ModuleName,
 		ibctransfermiddlewaretypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/beginBlockers
@@ -465,7 +459,6 @@ func NewComposableApp(
 		wasm08types.ModuleName,
 		icatypes.ModuleName,
 		wasm.ModuleName,
-		alliancemoduletypes.ModuleName,
 		stakingmiddlewaretypes.ModuleName,
 		ibctransfermiddlewaretypes.ModuleName,
 	)
@@ -505,7 +498,6 @@ func NewComposableApp(
 		wasm08types.ModuleName,
 		icatypes.ModuleName,
 		wasm.ModuleName,
-		alliancemoduletypes.ModuleName,
 		stakingmiddlewaretypes.ModuleName,
 		ibctransfermiddlewaretypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
@@ -618,18 +610,18 @@ func (app *ComposableApp) GetTxConfig() client.TxConfig {
 }
 
 // BeginBlocker application updates every begin block
-func (app *ComposableApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+func (app *ComposableApp) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
 	BeginBlockForks(ctx, app)
-	return app.mm.BeginBlock(ctx, req)
+	return app.mm.BeginBlock(ctx)
 }
 
 // EndBlocker application updates every end block
-func (app *ComposableApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-	return app.mm.EndBlock(ctx, req)
+func (app *ComposableApp) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
+	return app.mm.EndBlock(ctx)
 }
 
 // InitChainer application update at chain initialization
-func (app *ComposableApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func (app *ComposableApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 	var genesisState GenesisState
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
@@ -682,7 +674,7 @@ func (app *ComposableApp) RegisterAPIRoutes(apiSvr *api.Server, _ config.APIConf
 	// Register new tx routes from grpc-gateway.
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 	// Register new tendermint queries routes from grpc-gateway.
-	tmservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+	cmtservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
@@ -696,12 +688,12 @@ func (app *ComposableApp) RegisterTxService(clientCtx client.Context) {
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
 func (app *ComposableApp) RegisterTendermintService(clientCtx client.Context) {
-	tmservice.RegisterTendermintService(clientCtx, app.BaseApp.GRPCQueryRouter(), app.interfaceRegistry, app.Query)
+	cmtservice.RegisterTendermintService(clientCtx, app.BaseApp.GRPCQueryRouter(), app.interfaceRegistry, app.Query)
 }
 
 // RegisterNodeService registers the node gRPC Query service.
-func (app *ComposableApp) RegisterNodeService(clientCtx client.Context) {
-	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter())
+func (app *ComposableApp) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
+	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg)
 }
 
 // GetMaccPerms returns a copy of the module account permissions

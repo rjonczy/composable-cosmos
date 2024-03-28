@@ -12,24 +12,24 @@ import (
 	"time"
 
 	"cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/store/snapshots"
+	"cosmossdk.io/store/snapshots/types"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/snapshots"
-	"github.com/cosmos/cosmos-sdk/snapshots/types"
 	helpers "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 
-	dbm "github.com/cometbft/cometbft-db"
 	tmtypes "github.com/cometbft/cometbft/types"
+	dbm "github.com/cosmos/cosmos-db"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -39,7 +39,6 @@ import (
 	minttypes "github.com/notional-labs/composable/v6/x/mint/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
@@ -77,13 +76,13 @@ func setup(tb testing.TB, withGenesis bool, invCheckPeriod uint) (*ComposableApp
 	app := NewComposableApp(
 		log.NewNopLogger(),
 		db, nil, true,
-		wasmtypes.EnableAllProposals,
 		map[int64]bool{},
 		nodeHome,
 		invCheckPeriod,
 		MakeEncodingConfig(),
 		EmptyBaseAppOptions{},
 		wasmOpts,
+		nil,
 		baseAppOpts...)
 	if withGenesis {
 		return app, NewDefaultGenesisState()
@@ -111,7 +110,7 @@ func SetupWithGenesisValSet(
 	validators := make([]stakingtypes.Validator, 0, len(valSet.Validators))
 	delegations := make([]stakingtypes.Delegation, 0, len(valSet.Validators))
 
-	bondAmt := sdk.NewInt(1000000000000)
+	bondAmt := sdkmath.NewInt(1000000000000)
 
 	for _, val := range valSet.Validators {
 		pk, err := cryptocodec.FromTmPubKeyInterface(val.PubKey)
@@ -124,15 +123,15 @@ func SetupWithGenesisValSet(
 			Jailed:            false,
 			Status:            stakingtypes.Bonded,
 			Tokens:            bondAmt,
-			DelegatorShares:   sdk.OneDec(),
+			DelegatorShares:   sdkmath.LegacyOneDec(),
 			Description:       stakingtypes.Description{},
 			UnbondingHeight:   int64(0),
 			UnbondingTime:     time.Unix(0, 0).UTC(),
-			Commission:        stakingtypes.NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
-			MinSelfDelegation: sdk.ZeroInt(),
+			Commission:        stakingtypes.NewCommission(sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec()),
+			MinSelfDelegation: sdkmath.ZeroInt(),
 		}
 		validators = append(validators, validator)
-		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), sdk.OneDec()))
+		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress().String(), val.Address.String(), sdkmath.LegacyOneDec()))
 	}
 
 	// set validators and delegations
@@ -160,7 +159,7 @@ func SetupWithGenesisValSet(
 
 	// init chain will set the validator set and initialize the genesis accounts
 	app.InitChain(
-		abci.RequestInitChain{
+		&abci.RequestInitChain{
 			Time:            ctxTime,
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: DefaultConsensusParams,
@@ -170,12 +169,12 @@ func SetupWithGenesisValSet(
 
 	// commit genesis changes
 	app.Commit()
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
-		Height:             app.LastBlockHeight() + 1,
-		AppHash:            app.LastCommitID().Hash,
-		ValidatorsHash:     valSet.Hash(),
+	app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: app.LastBlockHeight() + 1,
+		Hash:   app.LastCommitID().Hash, // Apphash -> hash
+		// ValidatorsHash:     valSet.Hash(),
 		NextValidatorsHash: valSet.Hash(),
-	}})
+	})
 
 	return app
 }
@@ -230,7 +229,12 @@ func createIncrementalAccounts(accNum int) []sdk.AccAddress {
 
 // AddTestAddrsFromPubKeys adds the addresses into the WasmApp providing only the public keys.
 func AddTestAddrsFromPubKeys(app *ComposableApp, ctx sdk.Context, pubKeys []cryptotypes.PubKey, accAmt sdkmath.Int) {
-	initCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt))
+	denom, err := app.StakingKeeper.BondDenom(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	initCoins := sdk.NewCoins(sdk.NewCoin(denom, accAmt))
 
 	for _, pk := range pubKeys {
 		initAccountWithCoins(app, ctx, sdk.AccAddress(pk.Address()), initCoins)
@@ -252,7 +256,12 @@ func AddTestAddrsIncremental(app *ComposableApp, ctx sdk.Context, accNum int, ac
 func addTestAddrs(app *ComposableApp, ctx sdk.Context, accNum int, accAmt sdkmath.Int, strategy GenerateAccountStrategy) []sdk.AccAddress {
 	testAddrs := strategy(accNum)
 
-	initCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt))
+	denom, err := app.StakingKeeper.BondDenom(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	initCoins := sdk.NewCoins(sdk.NewCoin(denom, accAmt))
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range testAddrs {
@@ -309,8 +318,8 @@ func TestAddr(addr, bech string) (sdk.AccAddress, error) {
 // CheckBalance checks the balance of an account.
 func CheckBalance(t *testing.T, app *ComposableApp, addr sdk.AccAddress, balances sdk.Coins) {
 	t.Helper()
-	ctxCheck := app.BaseApp.NewContext(true, tmproto.Header{})
-	require.True(t, balances.IsEqual(app.BankKeeper.GetAllBalances(ctxCheck, addr)))
+	ctxCheck := app.BaseApp.NewContext(true)
+	require.True(t, balances.Equal(app.BankKeeper.GetAllBalances(ctxCheck, addr)))
 }
 
 const DefaultGas = 1200000
@@ -351,7 +360,7 @@ func SignCheckDeliver(
 	}
 
 	// Simulate a sending a transaction and committing a block
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	// app.BeginBlock(abci.RequestFinalizeBlock{Header: header})
 	gInfo, res, err := app.SimDeliver(txCfg.TxEncoder(), tx)
 
 	if expPass {
@@ -362,7 +371,7 @@ func SignCheckDeliver(
 		require.Nil(t, res)
 	}
 
-	app.EndBlock(abci.RequestEndBlock{})
+	// app.EndBlock(abci.RequestEndBlock{}) TODO: Check begin and end block
 	app.Commit()
 
 	return gInfo, res, err
@@ -389,7 +398,7 @@ func SignAndDeliver(
 	require.NoError(t, err)
 
 	// Simulate a sending a transaction and committing a block
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	//app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	gInfo, res, err := app.SimDeliver(txCfg.TxEncoder(), tx)
 
 	if expPass {
@@ -400,7 +409,7 @@ func SignAndDeliver(
 		require.Nil(t, res)
 	}
 
-	app.EndBlock(abci.RequestEndBlock{})
+	//app.EndBlock(abci.RequestEndBlock{})
 	app.Commit()
 
 	return gInfo, res, err

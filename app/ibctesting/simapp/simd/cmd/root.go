@@ -6,12 +6,14 @@ import (
 	"os"
 	"path/filepath"
 
-	sdkcmd "cosmossdk.io/simapp/simd/cmd"
+	"cosmossdk.io/log"
+	"cosmossdk.io/store"
+	"cosmossdk.io/store/snapshots"
+	snapshottypes "cosmossdk.io/store/snapshots/types"
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
-	dbm "github.com/cometbft/cometbft-db"
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
-	"github.com/cometbft/cometbft/libs/log"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
@@ -22,9 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/snapshots"
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -36,8 +35,8 @@ import (
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/ibc-go/v7/testing/simapp"
-	"github.com/cosmos/ibc-go/v7/testing/simapp/params"
+	"github.com/cosmos/ibc-go/v8/testing/simapp"
+	"github.com/cosmos/ibc-go/v8/testing/simapp/params"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the
@@ -169,7 +168,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		genutilcli.ValidateGenesisCmd(simapp.ModuleBasics),
 		AddGenesisAccountCmd(simapp.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
-		sdkcmd.NewTestnetCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
+		// sdkcmd.NewTestnetCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 		config.Cmd(),
 	)

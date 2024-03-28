@@ -4,6 +4,7 @@ import (
 	"context"
 
 	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/notional-labs/composable/v6/x/ibctransfermiddleware/types"
@@ -105,14 +106,14 @@ func (ms msgServer) AddAllowedIbcToken(goCtx context.Context, req *types.MsgAddA
 		if coin != nil {
 			coin_c := sdk.Coin{
 				Denom:  req.Denom,
-				Amount: sdk.NewInt(req.Amount),
+				Amount: sdkmath.NewInt(req.Amount),
 			}
 			coin.MinFee = coin_c
 			coin.Percentage = req.Percentage
 		} else {
 			coin_c := sdk.Coin{
 				Denom:  req.Denom,
-				Amount: sdk.NewInt(req.Amount),
+				Amount: sdkmath.NewInt(req.Amount),
 			}
 			coin := &types.CoinItem{
 				MinFee:     coin_c,

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -55,7 +55,7 @@ func IterateStoreByPrefix(
 	fn func(value []byte) (newValue []byte),
 ) {
 	store := ctx.KVStore(storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, prefix)
+	iterator := storetypes.KVStorePrefixIterator(store, prefix)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {

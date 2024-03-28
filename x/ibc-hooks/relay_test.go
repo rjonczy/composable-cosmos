@@ -5,9 +5,10 @@ import (
 	"testing"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	"github.com/stretchr/testify/suite"
 
 	customibctesting "github.com/notional-labs/composable/v6/app/ibctesting"
@@ -49,7 +50,7 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (suite *IBCHooksTestSuite) TestRecvHooks() {
 	var (
-		transferAmount = sdk.NewInt(1000000000)
+		transferAmount = sdkmath.NewInt(1000000000)
 		timeoutHeight  = clienttypes.NewHeight(1, 110)
 	// when transfer via sdk transfer from A (module) -> B (contract)
 	// nativeTokenSendOnChainA = sdk.NewCoin(sdk.DefaultBondDenom, transferAmount)
@@ -106,7 +107,7 @@ func (suite *IBCHooksTestSuite) TestRecvHooks() {
 
 func (suite *IBCHooksTestSuite) TestAckHooks() {
 	var (
-		transferAmount = sdk.NewInt(1000000000)
+		transferAmount = sdkmath.NewInt(1000000000)
 		timeoutHeight  = clienttypes.NewHeight(0, 110)
 	// when transfer via sdk transfer from A (module) -> B (contract)
 	// nativeTokenSendOnChainA = sdk.NewCoin(sdk.DefaultBondDenom, transferAmount)
@@ -183,7 +184,7 @@ func (suite *IBCHooksTestSuite) TestAckHooks() {
 
 func (suite *IBCHooksTestSuite) TestTimeoutHooks() {
 	var (
-		transferAmount = sdk.NewInt(1000000000)
+		transferAmount = sdkmath.NewInt(1000000000)
 		timeoutHeight  = clienttypes.NewHeight(0, 500)
 	// when transfer via sdk transfer from A (module) -> B (contract)
 	// nativeTokenSendOnChainA = sdk.NewCoin(sdk.DefaultBondDenom, transferAmount)

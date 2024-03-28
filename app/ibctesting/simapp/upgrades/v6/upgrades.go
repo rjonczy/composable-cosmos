@@ -1,14 +1,16 @@
 package v6
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"context"
 
-	v6 "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/migrations/v6"
+	storetypes "cosmossdk.io/store/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	v6 "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/migrations/v6"
 )
 
 const (
@@ -26,8 +28,9 @@ func CreateUpgradeHandler(
 	capabilityKeeper *capabilitykeeper.Keeper,
 	moduleName string,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, _ upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
-		if err := v6.MigrateICS27ChannelCapability(ctx, cdc, capabilityStoreKey, capabilityKeeper, moduleName); err != nil {
+	return func(ctx context.Context, _ upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		sdkctx := sdk.UnwrapSDKContext(ctx)
+		if err := v6.MigrateICS27ChannelCapability(sdkctx, cdc, capabilityStoreKey, capabilityKeeper, moduleName); err != nil {
 			return nil, err
 		}
 
