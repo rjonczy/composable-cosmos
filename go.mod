@@ -8,7 +8,6 @@ require (
 	github.com/CosmWasm/wasmd v0.50.0
 	github.com/client9/misspell v0.3.4
 	github.com/cometbft/cometbft v0.38.6
-	github.com/cometbft/cometbft-db v0.11.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.4
 	github.com/cosmos/cosmos-sdk v0.50.5
 	github.com/cosmos/gogoproto v1.4.12
@@ -31,6 +30,8 @@ require (
 	gotest.tools/v3 v3.5.1
 	mvdan.cc/gofumpt v0.4.0
 )
+
+require github.com/cometbft/cometbft-db v0.11.0 // indirect
 
 require (
 	4d63.com/gocheckcompilerdirectives v1.2.1 // indirect
@@ -354,6 +355,7 @@ require (
 )
 
 replace (
+	cosmossdk.io/core => cosmossdk.io/core v0.11.0
 	// Use the keyring specified by the cosmos-sdk
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
 	// lock wasmvm so we do not break the grandpa contract
@@ -364,6 +366,10 @@ replace (
 
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+
+	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.18.0
+
+	github.com/prometheus/common => github.com/prometheus/common v0.47.0
 
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
