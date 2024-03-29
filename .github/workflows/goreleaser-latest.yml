@@ -34,7 +34,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - run: |
-          find . -name "*linux_amd64.tar.gz"
+          find . -name "*linux_amd64.tar.gz -exec tar xzfv {} ;\"
       # - name: Login to GHCR container register
       #   uses: docker/login-action@v3
       #   with:
