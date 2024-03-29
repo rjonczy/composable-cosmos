@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	wasm08 "github.com/cosmos/ibc-go/modules/light-clients/08-wasm"
 	wasm08keeper "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/keeper"
+	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 	tendermint "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 
 	wasm08types "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
@@ -90,7 +91,6 @@ import (
 	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
-	ibchost "github.com/cosmos/ibc-go/v8/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	customibctransfer "github.com/notional-labs/composable/v6/custom/ibc-transfer"
 	customstaking "github.com/notional-labs/composable/v6/custom/staking"
@@ -408,7 +408,7 @@ func NewComposableApp(
 		evidencetypes.ModuleName,
 		stakingtypes.ModuleName,
 		vestingtypes.ModuleName,
-		ibchost.ModuleName,
+		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
 		routertypes.ModuleName,
 		transfermiddlewaretypes.ModuleName,
@@ -446,6 +446,7 @@ func NewComposableApp(
 		distrtypes.ModuleName,
 		slashingtypes.ModuleName,
 		vestingtypes.ModuleName,
+		ibcexported.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		authz.ModuleName,
@@ -453,7 +454,6 @@ func NewComposableApp(
 		group.ModuleName,
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
-		ibchost.ModuleName,
 		routertypes.ModuleName,
 		transfermiddlewaretypes.ModuleName,
 		txBoundaryTypes.ModuleName,
@@ -486,7 +486,7 @@ func NewComposableApp(
 		govtypes.ModuleName,
 		minttypes.ModuleName,
 		crisistypes.ModuleName,
-		ibchost.ModuleName,
+		ibcexported.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		authz.ModuleName,
