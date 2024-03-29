@@ -13,7 +13,7 @@ if [ "$CONTINUE" == "true" ]; then
     exit 0
 fi
 
-rm -rf mytestnet
+rm -rf $HOME_DIR
 pkill centaurid
 
 # check DENOM is set. If not, set to upica
@@ -38,7 +38,7 @@ fi
 # check BINARY is set. If not, build centaurid and set BINARY
 if [ -z "$BINARY" ]; then
     make build
-    BINARY=build/centaurid
+    BINARY=centaurid
 fi
 
 CHAIN_ID="localpica"

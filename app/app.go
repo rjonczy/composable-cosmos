@@ -1,6 +1,8 @@
 package app
 
 import (
+	"cosmossdk.io/x/circuit"
+	circuittypes "cosmossdk.io/x/circuit/types"
 	"fmt"
 	"io"
 	"os"
@@ -203,6 +205,7 @@ var (
 		consensus.AppModuleBasic{},
 		stakingmiddleware.AppModuleBasic{},
 		ibctransfermiddleware.AppModuleBasic{},
+		circuit.AppModuleBasic{},
 		// this line is used by starport scaffolding # stargate/app/moduleBasic
 	)
 
@@ -384,6 +387,7 @@ func NewComposableApp(
 		txBoundaryModule,
 		icaModule,
 		ratelimitModule,
+		circuit.NewAppModule(appCodec, app.CircuitKeeper),
 		// this line is used by starport scaffolding # stargate/app/appModule
 	)
 
@@ -422,9 +426,10 @@ func NewComposableApp(
 		group.ModuleName,
 		paramstypes.ModuleName,
 		consensusparamtypes.ModuleName,
+		circuittypes.ModuleName,
 		wasm08types.ModuleName,
 		icatypes.ModuleName,
-		wasm.ModuleName,
+		wasmtypes.ModuleName,
 		stakingmiddlewaretypes.ModuleName,
 		ibctransfermiddlewaretypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/beginBlockers
@@ -457,9 +462,10 @@ func NewComposableApp(
 		ibctransfertypes.ModuleName,
 		icqtypes.ModuleName,
 		consensusparamtypes.ModuleName,
+		circuittypes.ModuleName,
 		wasm08types.ModuleName,
 		icatypes.ModuleName,
-		wasm.ModuleName,
+		wasmtypes.ModuleName,
 		stakingmiddlewaretypes.ModuleName,
 		ibctransfermiddlewaretypes.ModuleName,
 	)
@@ -496,9 +502,10 @@ func NewComposableApp(
 		feegrant.ModuleName,
 		group.ModuleName,
 		consensusparamtypes.ModuleName,
+		circuittypes.ModuleName,
 		wasm08types.ModuleName,
 		icatypes.ModuleName,
-		wasm.ModuleName,
+		wasmtypes.ModuleName,
 		stakingmiddlewaretypes.ModuleName,
 		ibctransfermiddlewaretypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
@@ -555,6 +562,7 @@ func NewComposableApp(
 		app.IBCKeeper,
 		app.TransferMiddlewareKeeper,
 		app.TxBoundaryKeepper,
+		&app.CircuitKeeper,
 		appCodec,
 	))
 	app.SetEndBlocker(app.EndBlocker)

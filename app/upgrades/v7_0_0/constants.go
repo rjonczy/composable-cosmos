@@ -2,6 +2,7 @@ package v7_0_0
 
 import (
 	store "cosmossdk.io/store/types"
+	circuittypes "cosmossdk.io/x/circuit/types"
 	"github.com/notional-labs/composable/v6/app/upgrades"
 )
 
@@ -14,7 +15,9 @@ var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
 	CreateUpgradeHandler: CreateUpgradeHandler,
 	StoreUpgrades: store.StoreUpgrades{
-		Added:   []string{},
+		Added: []string{
+			circuittypes.ModuleName,
+		},
 		Deleted: []string{"alliance"},
 	},
 }

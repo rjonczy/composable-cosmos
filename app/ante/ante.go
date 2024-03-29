@@ -1,6 +1,8 @@
 package ante
 
 import (
+	circuitante "cosmossdk.io/x/circuit/ante"
+	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 	ibcante "github.com/cosmos/ibc-go/v8/modules/core/ante"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 
@@ -28,6 +30,7 @@ func NewAnteHandler(
 	channelKeeper *ibckeeper.Keeper,
 	tfmwKeeper tfmwKeeper.Keeper,
 	txBoundaryKeeper txBoundaryKeeper.Keeper,
+	ck *circuitkeeper.Keeper,
 	codec codec.BinaryCodec,
 ) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
@@ -35,6 +38,7 @@ func NewAnteHandler(
 		ante.NewValidateBasicDecorator(),
 		ante.NewConsumeGasForTxSizeDecorator(ak),
 		ante.NewDeductFeeDecorator(ak, bk, feegrantKeeper, txFeeChecker),
+		circuitante.NewCircuitBreakerDecorator(ck),
 		ante.NewTxTimeoutHeightDecorator(),
 		ante.NewValidateMemoDecorator(ak),
 		ante.NewConsumeGasForTxSizeDecorator(ak),
