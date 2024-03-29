@@ -44,7 +44,6 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	stakingtypes.RegisterQueryServer(cfg.QueryServer(), querier)
 
 	m := stakingkeeper.NewMigrator(&am.keeper.Keeper, am.subspace)
-	fmt.Println("Registering migrations for x/staking: staking 1->2")
 	if err := cfg.RegisterMigration(stakingtypes.ModuleName, 1, m.Migrate1to2); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/staking from version 1 to 2: %v", err))
 	}

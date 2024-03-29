@@ -520,13 +520,10 @@ func NewComposableApp(
 	app.mm.RegisterInvariants(app.CrisisKeeper)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 
-	fmt.Println("registering services")
 	err = app.mm.RegisterServices(app.configurator)
 	if err != nil {
 		panic(err)
 	}
-
-	fmt.Println("done registering services")
 
 	app.setupUpgradeHandlers()
 
@@ -634,14 +631,12 @@ func (app *ComposableApp) GetTxConfig() client.TxConfig {
 
 // BeginBlocker application updates every begin block
 func (app *ComposableApp) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
-	fmt.Println("begin block")
 	BeginBlockForks(ctx, app)
 	return app.mm.BeginBlock(ctx)
 }
 
 // EndBlocker application updates every end block
 func (app *ComposableApp) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
-	fmt.Println("end block")
 	return app.mm.EndBlock(ctx)
 }
 
@@ -651,7 +646,6 @@ func (app *ComposableApp) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlo
 
 // InitChainer application update at chain initialization
 func (app *ComposableApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
-	fmt.Println("init chainner")
 	var genesisState GenesisState
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
@@ -773,7 +767,6 @@ func (app *ComposableApp) customPreUpgradeHandler(_ upgradetypes.Plan) {
 
 func (app *ComposableApp) setupUpgradeHandlers() {
 	for _, upgrade := range Upgrades {
-		fmt.Println("setting upgrade handler for", upgrade.UpgradeName)
 
 		app.UpgradeKeeper.SetUpgradeHandler(
 			upgrade.UpgradeName,
