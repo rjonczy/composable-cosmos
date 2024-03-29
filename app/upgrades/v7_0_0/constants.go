@@ -5,7 +5,6 @@ import (
 	circuittypes "cosmossdk.io/x/circuit/types"
 	"github.com/notional-labs/composable/v6/app/upgrades"
 
-	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
 )
 
@@ -22,8 +21,6 @@ var Upgrade = upgrades.Upgrade{
 			circuittypes.ModuleName,
 
 			icacontrollertypes.StoreKey,
-
-			authzkeeper.StoreKey,
 		},
 		Deleted: []string{"alliance"},
 	},
