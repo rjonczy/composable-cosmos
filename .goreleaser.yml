@@ -15,14 +15,15 @@ builds:
           output: true # enable for debug
           env:
             - TARGET={{ .Target }}
+        - cmd: go mod tidy
     goos:
       - linux
     goarch:
       - amd64
-      - arm64
+      # - arm64
     env:
       - CC_linux_amd64=x86_64-linux-gnu-gcc
-      - CC_linux_arm64=aarch64-linux-gnu-gcc
+      # - CC_linux_arm64=aarch64-linux-gnu-gcc
       - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
     flags:
       - -mod=readonly
@@ -32,10 +33,10 @@ builds:
       - -X github.com/cosmos/cosmos-sdk/version.AppName=centaurid
       - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }}
       - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
-      - -X "github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,muslc"
+      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,muslc
       - -w -s
       # - -linkmode=external
-      # - -extldflags '-static -lm -lbz2'
+      - -extldflags '-static -lm -lbz2'
     tags:
       - netgo
       - ledger
