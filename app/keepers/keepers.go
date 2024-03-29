@@ -540,13 +540,13 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypesv1.ParamKeyTable())     //nolint:staticcheck
 	paramsKeeper.Subspace(minttypes.ModuleName).WithKeyTable(minttypes.ParamKeyTable())
 	paramsKeeper.Subspace(crisistypes.ModuleName)
-	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
+	paramsKeeper.Subspace(ibctransfertypes.ModuleName).WithKeyTable(ibctransfertypes.ParamKeyTable())
 	paramsKeeper.Subspace(ratelimitmoduletypes.ModuleName)
-	paramsKeeper.Subspace(icqtypes.ModuleName)
-	paramsKeeper.Subspace(icahosttypes.SubModuleName)
+	paramsKeeper.Subspace(icqtypes.ModuleName).WithKeyTable(icqtypes.ParamKeyTable())
+	paramsKeeper.Subspace(icahosttypes.SubModuleName).WithKeyTable(icahosttypes.ParamKeyTable())
 	paramsKeeper.Subspace(wasm08types.ModuleName)
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
-	paramsKeeper.Subspace(transfermiddlewaretypes.ModuleName)
+	paramsKeeper.Subspace(transfermiddlewaretypes.ModuleName).WithKeyTable(transfermiddlewaretypes.ParamKeyTable())
 	paramsKeeper.Subspace(stakingmiddlewaretypes.ModuleName)
 	paramsKeeper.Subspace(ibctransfermiddlewaretypes.ModuleName)
 
