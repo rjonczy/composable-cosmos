@@ -38,9 +38,7 @@ jobs:
           find . -name "*amd64.tar.gz" -exec tar xzfv {} \;
           find . -name "centaurid"
           ./centaurid version
-          ./dist/linux_linux_amd64_v1/centaurid version
-          ./cmd/centaurid version
-          
+
       # - name: Login to GHCR container register
       #   uses: docker/login-action@v3
       #   with:
