@@ -20,6 +20,7 @@ if [ "$TARGET" == "linux_amd64_v1" ]; then
 
   wget -c https://github.com/CosmWasm/wasmvm/releases/download/v${WASMVM_VERSION}/libwasmvm_muslc.x86_64.a -O /tmp/libwasmvm_muslc.x86_64.a
   cp /tmp/libwasmvm_muslc.x86_64.a /usr/lib/x86_64-linux-gnu/libwasmvm_muslc.a
+  cp /tmp/libwasmvm_muslc.x86_64.a /lib/libwasmvm_muslc.a
 else
   echo "executing ${TARGET}"
   apt-get -o DPkg::Lock::Timeout=60 install --no-install-recommends -y libzstd-dev:arm64 libsnappy-dev:arm64 liblz4-dev:arm64 libbz2-dev:arm64 zlib1g-dev:arm64
