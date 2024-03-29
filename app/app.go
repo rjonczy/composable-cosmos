@@ -1,12 +1,13 @@
 package app
 
 import (
-	"cosmossdk.io/x/circuit"
-	circuittypes "cosmossdk.io/x/circuit/types"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+
+	"cosmossdk.io/x/circuit"
+	circuittypes "cosmossdk.io/x/circuit/types"
 
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/std"
@@ -513,7 +514,14 @@ func NewComposableApp(
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
-	app.mm.RegisterServices(app.configurator)
+
+	fmt.Println("registering services")
+	err = app.mm.RegisterServices(app.configurator)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("done registering services")
 
 	app.setupUpgradeHandlers()
 
