@@ -2,6 +2,9 @@ package v7_0_0
 
 import (
 	"context"
+	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -19,6 +22,13 @@ func CreateUpgradeHandler(
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx context.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		fmt.Println("Start v7.0.0 upgrade")
+		clientKeeper := keepers.IBCKeeper.ClientKeeper
+		oldCtx := sdk.UnwrapSDKContext(ctx)
+		params := clientKeeper.GetParams(oldCtx)
+		params.AllowedClients = append(params.AllowedClients, types.Wasm)
+		clientKeeper.SetParams(oldCtx, params)
+
 		return mm.RunMigrations(ctx, configurator, vm)
 	}
 }

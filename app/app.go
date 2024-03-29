@@ -321,7 +321,6 @@ func NewComposableApp(
 		skipUpgradeHeights,
 		homePath,
 	)
-	app.setupUpgradeStoreLoaders()
 	app.InitNormalKeepers(
 		logger,
 		appCodec,
@@ -520,7 +519,6 @@ func NewComposableApp(
 	if err != nil {
 		panic(err)
 	}
-
 	fmt.Println("done registering services")
 
 	app.setupUpgradeHandlers()
@@ -727,31 +725,6 @@ func (app *ComposableApp) SimulationManager() *module.SimulationManager {
 	return app.sm
 }
 
-// configure store loader that checks if version == upgradeHeight and applies store upgrades
-func (app *ComposableApp) setupUpgradeStoreLoaders() {
-	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
-	if err != nil {
-		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
-	}
-
-	if app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		return
-	}
-
-	currentHeight := app.CommitMultiStore().LastCommitID().Version
-
-	if upgradeInfo.Height == currentHeight+1 {
-		app.customPreUpgradeHandler(upgradeInfo)
-	}
-
-	for _, upgrade := range Upgrades {
-		upgrade := upgrade
-		if upgradeInfo.Name == upgrade.UpgradeName {
-			app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &upgrade.StoreUpgrades))
-		}
-	}
-}
-
 func (app *ComposableApp) customPreUpgradeHandler(_ upgradetypes.Plan) {
 	// switch upgradeInfo.Name {
 	// default:
@@ -770,5 +743,30 @@ func (app *ComposableApp) setupUpgradeHandlers() {
 				&app.AppKeepers,
 			),
 		)
+	}
+
+	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	fmt.Println("setupUpgradeHandlers", upgradeInfo)
+	if err != nil {
+		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
+	}
+
+	if app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		return
+	}
+
+	currentHeight := app.CommitMultiStore().LastCommitID().Version
+	fmt.Println("currentHeight", currentHeight)
+
+	if upgradeInfo.Height == currentHeight+1 {
+		app.customPreUpgradeHandler(upgradeInfo)
+	}
+
+	for _, upgrade := range Upgrades {
+		fmt.Println(upgrade.UpgradeName, upgradeInfo.Name)
+		if upgradeInfo.Name == upgrade.UpgradeName {
+			app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &upgrade.StoreUpgrades))
+			break
+		}
 	}
 }
