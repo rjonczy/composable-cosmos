@@ -359,14 +359,12 @@ replace (
 
 	// Use the keyring specified by the cosmos-sdk
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
+
 	// lock wasmvm so we do not break the grandpa contract
 	// TODO: check wasm vm compatibility with grandpa contract
 	github.com/CosmWasm/wasmvm => github.com/CosmWasm/wasmvm v1.5.2
 
-	github.com/cosmos/cosmos-sdk => /Users/kien6034/go/pkg/mod/github.com/cosmos/cosmos-sdk@v0.50.5
-
-	github.com/cosmos/ibc-go/modules/light-clients/08-wasm => github.com/notional-labs/ibc-go/modules/light-clients/08-wasm v0.0.0-20240329093800-163b10569c21
-	// github.com/cosmos/ibc-go/modules/light-clients/08-wasm => /Users/hoank/resource/notional/ibc-go/modules/light-clients/08-wasm
+	github.com/cosmos/ibc-go/modules/light-clients/08-wasm => github.com/notional-labs/ibc-go/modules/light-clients/08-wasm v0.0.0-20240328152744-0f9d4a916102
 
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
