@@ -151,9 +151,9 @@ sleep 1
 # run new node
 echo -e "\n\n=> =>continue running nodes after upgrade"   
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    CONTINUE="true" screen -L -dmS centaurid bash scripts/localnode.sh _build/new/centaurid $DENOM
+    CONTINUE="true" bash scripts/localnode.sh _build/new/centaurid $DENOM
 else
-    CONTINUE="true" screen -L -dmS centaurid bash scripts/localnode.sh _build/new/centaurid $DENOM
+    CONTINUE="true" bash scripts/localnode.sh _build/new/centaurid $DENOM
 fi
 
 sleep 5

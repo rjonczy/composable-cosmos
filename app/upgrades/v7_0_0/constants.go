@@ -4,6 +4,8 @@ import (
 	store "cosmossdk.io/store/types"
 	circuittypes "cosmossdk.io/x/circuit/types"
 	"github.com/notional-labs/composable/v6/app/upgrades"
+
+	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
 )
 
 const (
@@ -17,6 +19,7 @@ var Upgrade = upgrades.Upgrade{
 	StoreUpgrades: store.StoreUpgrades{
 		Added: []string{
 			circuittypes.ModuleName,
+			icacontrollertypes.StoreKey,
 		},
 		Deleted: []string{"alliance"},
 	},
