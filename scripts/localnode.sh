@@ -77,7 +77,7 @@ $SED_BINARY -i -e 's/enabled-unsafe-cors = false/enabled-unsafe-cors = true/g' $
 $SED_BINARY -i 's/minimum-gas-prices = "0.25upica"/minimum-gas-prices = "0.0upica"/' $HOME_DIR/config/app.toml
 
 ## Adjust block time
-$SED_BINARY -i 's/timeout_commit = "5s"/timeout_commit = "500ms"/' $HOME_DIR/config/config.toml
+$SED_BINARY -i 's/timeout_commit = "5s"/timeout_commit = "1000ms"/' $HOME_DIR/config/config.toml
 
 
 

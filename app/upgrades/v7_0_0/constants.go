@@ -19,7 +19,6 @@ var Upgrade = upgrades.Upgrade{
 	StoreUpgrades: store.StoreUpgrades{
 		Added: []string{
 			circuittypes.ModuleName,
-
 			icacontrollertypes.StoreKey,
 		},
 		Deleted: []string{"alliance"},

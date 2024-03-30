@@ -1401,8 +1401,8 @@ github.com/nishanths/exhaustive v0.9.5 h1:TzssWan6orBiLYVqewCG8faud9qlFntJE30ACp
 github.com/nishanths/exhaustive v0.9.5/go.mod h1:IbwrGdVMizvDcIxPYGVdQn5BqWJaOwpCvg4RGb8r/TA=
 github.com/nishanths/predeclared v0.2.2 h1:V2EPdZPliZymNAn79T8RkNApBjMmVKh5XRpLm/w98Vk=
 github.com/nishanths/predeclared v0.2.2/go.mod h1:RROzoN6TnGQupbC+lqggsOlcgysk3LMK/HI84Mp280c=
-github.com/notional-labs/ibc-go/modules/light-clients/08-wasm v0.0.0-20240329093800-163b10569c21 h1:ktll354VVdwDzBrBw+30L7CWeSpQVzLzUyBAiDGCLuA=
-github.com/notional-labs/ibc-go/modules/light-clients/08-wasm v0.0.0-20240329093800-163b10569c21/go.mod h1:u2FXNcSxzzn5IwjWBA51HKMwiYMRK6/G35VmSJULhP0=
+github.com/notional-labs/ibc-go/modules/light-clients/08-wasm v0.0.0-20240330020027-fa949b150972 h1:nrxV6i6FBnMUwmx3Aqun7111xfOCFEIO9oetf5EVxEM=
+github.com/notional-labs/ibc-go/modules/light-clients/08-wasm v0.0.0-20240330020027-fa949b150972/go.mod h1:u2FXNcSxzzn5IwjWBA51HKMwiYMRK6/G35VmSJULhP0=
 github.com/nunnatsa/ginkgolinter v0.9.0 h1:Sm0zX5QfjJzkeCjEp+t6d3Ha0jwvoDjleP9XCsrEzOA=
 github.com/nunnatsa/ginkgolinter v0.9.0/go.mod h1:FHaMLURXP7qImeH6bvxWJUpyH+2tuqe5j4rW1gxJRmI=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
