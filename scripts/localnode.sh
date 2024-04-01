@@ -17,7 +17,7 @@ rm -rf $HOME_DIR
 pkill centaurid
 
 # check DENOM is set. If not, set to upica
-DENOM=${2:-upica}
+DENOM=${2:-ppica}
 echo "denom: $DENOM"
 COMMISSION_RATE=0.01
 COMMISSION_MAX_RATE=0.02
@@ -63,6 +63,8 @@ $BINARY keys add $KEY2 --keyring-backend $KEYRING --home $HOME_DIR
 $BINARY add-genesis-account $KEY "1000000000000000000000${DENOM}" --keyring-backend $KEYRING --home $HOME_DIR
 $BINARY add-genesis-account $KEY1 "1000000000000000000000${DENOM}" --keyring-backend $KEYRING --home $HOME_DIR
 $BINARY add-genesis-account $KEY2 "1000000000000000000000${DENOM}" --keyring-backend $KEYRING --home $HOME_DIR
+
+$BINARY add-genesis-account centauri1hj5fveer5cjtn4wd6wstzugjfdxzl0xpzxlwgs "1000000000000000000000${DENOM}" --keyring-backend $KEYRING --home $HOME_DIR
 
 update_test_genesis '.app_state["gov"]["params"]["voting_period"]="5s"'
 update_test_genesis '.app_state["mint"]["params"]["mint_denom"]="'$DENOM'"'
