@@ -3,6 +3,7 @@ package keepers
 import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"math"
 	"path/filepath"
 	"strings"
 
@@ -447,13 +448,21 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		wasmOpts...,
 	)
 
+	wasmDataDir := filepath.Join(homePath, "wasm_client_data")
+	wasmSupportedFeatures := strings.Join([]string{"storage", "iterator"}, ",")
+	wasmMemoryLimitMb := uint32(math.Pow(2, 12))
+	wasmPrintDebug := true
+	wasmCacheSizeMb := uint32(math.Pow(2, 8))
+
+	vm, err := wasmvm.NewVM(wasmDataDir, wasmSupportedFeatures, wasmMemoryLimitMb, wasmPrintDebug, wasmCacheSizeMb)
+
 	// use same VM for wasm
 	appKeepers.Wasm08Keeper = wasm08Keeper.NewKeeperWithVM(
 		appCodec,
 		runtime.NewKVStoreService(appKeepers.keys[wasm08types.StoreKey]),
 		&appKeepers.IBCKeeper.ClientKeeper,
-		authorityAddress,
-		wasmer,
+		"centauri1hj5fveer5cjtn4wd6wstzugjfdxzl0xpzxlwgs",
+		vm,
 		bApp.GRPCQueryRouter(),
 	)
 
