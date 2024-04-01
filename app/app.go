@@ -1,7 +1,11 @@
 package app
 
 import (
+	"cosmossdk.io/client/v2/autocli"
+	"cosmossdk.io/core/appmodule"
 	"fmt"
+	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"io"
 	"os"
 	"path/filepath"
@@ -43,7 +47,7 @@ import (
 
 	"github.com/notional-labs/composable/v6/app/keepers"
 	"github.com/notional-labs/composable/v6/app/upgrades/v6_5_0"
-	"github.com/notional-labs/composable/v6/app/upgrades/v7_0_0"
+	"github.com/notional-labs/composable/v6/app/upgrades/v7_0_1"
 
 	// bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"cosmossdk.io/x/evidence"
@@ -148,7 +152,7 @@ var (
 	// https://github.com/CosmWasm/wasmd/blob/02a54d33ff2c064f3539ae12d75d027d9c665f05/x/wasm/internal/types/proposal.go#L28-L34
 	EnableSpecificProposals = ""
 
-	Upgrades = []upgrades.Upgrade{v6_5_0.Upgrade, v7_0_0.Upgrade}
+	Upgrades = []upgrades.Upgrade{v6_5_0.Upgrade, v7_0_1.Upgrade}
 	Forks    = []upgrades.Fork{}
 )
 
@@ -195,7 +199,6 @@ var (
 		vesting.AppModuleBasic{},
 		tendermint.AppModuleBasic{},
 		mint.AppModuleBasic{},
-		wasm08.AppModuleBasic{},
 		wasm.AppModuleBasic{},
 		router.AppModuleBasic{},
 		ica.AppModuleBasic{},
@@ -207,6 +210,7 @@ var (
 		stakingmiddleware.AppModuleBasic{},
 		ibctransfermiddleware.AppModuleBasic{},
 		circuit.AppModuleBasic{},
+		wasm08.AppModuleBasic{},
 		// this line is used by starport scaffolding # stargate/app/moduleBasic
 	)
 
@@ -382,8 +386,8 @@ func NewComposableApp(
 		icqModule,
 		ibcHooksModule,
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
-		wasm08.NewAppModule(app.Wasm08Keeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName)),
+		wasm08.NewAppModule(app.Wasm08Keeper),
 		routerModule,
 		transfermiddlewareModule,
 		txBoundaryModule,
@@ -433,11 +437,11 @@ func NewComposableApp(
 		paramstypes.ModuleName,
 		consensusparamtypes.ModuleName,
 		circuittypes.ModuleName,
-		wasm08types.ModuleName,
 		icatypes.ModuleName,
 		wasmtypes.ModuleName,
 		stakingmiddlewaretypes.ModuleName,
 		ibctransfermiddlewaretypes.ModuleName,
+		wasm08types.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/beginBlockers
 	)
 
@@ -469,11 +473,11 @@ func NewComposableApp(
 		icqtypes.ModuleName,
 		consensusparamtypes.ModuleName,
 		circuittypes.ModuleName,
-		wasm08types.ModuleName,
 		icatypes.ModuleName,
 		wasmtypes.ModuleName,
 		stakingmiddlewaretypes.ModuleName,
 		ibctransfermiddlewaretypes.ModuleName,
+		wasm08types.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -509,11 +513,11 @@ func NewComposableApp(
 		group.ModuleName,
 		consensusparamtypes.ModuleName,
 		circuittypes.ModuleName,
-		wasm08types.ModuleName,
 		icatypes.ModuleName,
 		wasmtypes.ModuleName,
 		stakingmiddlewaretypes.ModuleName,
 		ibctransfermiddlewaretypes.ModuleName,
+		wasm08types.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	)
 
@@ -778,5 +782,26 @@ func (app *ComposableApp) setupUpgradeHandlers() {
 				&app.AppKeepers,
 			),
 		)
+	}
+}
+
+// AutoCliOpts returns the autocli options for the app.
+func (app *ComposableApp) AutoCliOpts() autocli.AppOptions {
+	modules := make(map[string]appmodule.AppModule, 0)
+	for _, m := range app.mm.Modules {
+		if moduleWithName, ok := m.(module.HasName); ok {
+			moduleName := moduleWithName.Name()
+			if appModule, ok := moduleWithName.(appmodule.AppModule); ok {
+				modules[moduleName] = appModule
+			}
+		}
+	}
+
+	return autocli.AppOptions{
+		Modules:               modules,
+		ModuleOptions:         runtimeservices.ExtractAutoCLIOptions(app.mm.Modules),
+		AddressCodec:          authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
+		ValidatorAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
+		ConsensusAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
 	}
 }

@@ -9,7 +9,7 @@ HOME=mytestnet
 ROOT=$(pwd)
 DENOM=upica
 CHAIN_ID=localpica
-SOFTWARE_UPGRADE_NAME="v7_0_0"
+SOFTWARE_UPGRADE_NAME="v7_0_1"
 ADDITIONAL_PRE_SCRIPTS=""
 ADDITIONAL_AFTER_SCRIPTS=""
 
@@ -93,7 +93,7 @@ run_upgrade () {
 
     # Get upgrade height, 12 block after (6s)
     STATUS_INFO=($(./_build/old/centaurid status --home $HOME | jq -r '.NodeInfo.network,.SyncInfo.latest_block_height'))
-    UPGRADE_HEIGHT=$((STATUS_INFO[1] + 20))
+    UPGRADE_HEIGHT=$((STATUS_INFO[1] + 50))
     echo "UPGRADE_HEIGHT = $UPGRADE_HEIGHT"
 
     tar -cf ./_build/new/centaurid.tar -C ./_build/new centaurid
