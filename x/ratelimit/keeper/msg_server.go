@@ -46,10 +46,6 @@ func (k Keeper) AddTransferRateLimit(goCtx context.Context, msg *types.MsgAddRat
 func (k Keeper) UpdateTransferRateLimit(goCtx context.Context, msg *types.MsgUpdateRateLimit) (*types.MsgUpdateRateLimitResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if k.authority != msg.Authority {
-		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
-	}
-
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, err
 	}
