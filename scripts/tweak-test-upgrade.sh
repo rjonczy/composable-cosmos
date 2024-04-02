@@ -3,17 +3,21 @@
 # the upgrade is a fork, "true" otherwise
 FORK=${FORK:-"false"}
 
-OLD_VERSION=v6.5.0
+OLD_VERSION=kien-v6.5.0-tweak
 UPGRADE_WAIT=${UPGRADE_WAIT:-20}
 HOME=mytestnet
 ROOT=$(pwd)
-DENOM=ppica
+DENOM=upica
 CHAIN_ID=localpica
 SOFTWARE_UPGRADE_NAME="v7_0_1"
-ADDITIONAL_PRE_SCRIPTS=""
-ADDITIONAL_AFTER_SCRIPTS=""
+ADDITIONAL_PRE_SCRIPTS="./scripts/upgrade/v6_to_7/pre_08_wasm.sh"
+ADDITIONAL_AFTER_SCRIPTS="./scripts/upgrade/v6_to_7/post_08_wasm.sh"
 
 SLEEP_TIME=1
+
+KEY="mykey"
+KEY1="test1"
+KEY2="test2"
 
 if [[ "$FORK" == "true" ]]; then
     export PICA_HALT_HEIGHT=20
@@ -23,37 +27,43 @@ fi
 mkdir -p _build/gocache
 export GOMODCACHE=$ROOT/_build/gocache
 
+
+
 # install old binary if not exist
 if [ ! -f "_build/$OLD_VERSION.zip" ] &> /dev/null
 then
     mkdir -p _build/old
-    wget -c "https://github.com/ComposableFi/composable-cosmos/archive/refs/tags/${OLD_VERSION}.zip" -O _build/${OLD_VERSION}.zip
+    wget -c "https://github.com/notional-labs/composable-cosmos/archive/refs/tags/${OLD_VERSION}.zip" -O _build/${OLD_VERSION}.zip
     unzip _build/${OLD_VERSION}.zip -d _build
 fi
 
+
 # reinstall old binary
 if [ $# -eq 1 ] && [ $1 == "--reinstall-old" ] || ! command -v _build/old/centaurid &> /dev/null; then
-    cd ./_build/composable-cosmos-${OLD_VERSION:1}
+    cd ./_build/composable-cosmos-${OLD_VERSION}
     GOBIN="$ROOT/_build/old" go install -mod=readonly ./...
     cd ../..
 fi
 
+
 # install new binary
-if ! command -v _build/new/centaurid &> /dev/null
-then
+FORCE_BUILD=${FORCE_BUILD:-"false"}
+if ! command -v _build/new/centaurid &> /dev/null || [[ "$FORCE_BUILD" == "true" ]]; then
+    echo "Building the new binary..."
     mkdir -p _build/new
     GOBIN="$ROOT/_build/new" go install -mod=readonly ./...
 fi
 
 # run old node
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    echo "running old node"
-    screen -L -dmS node1 bash scripts/localnode.sh _build/old/centaurid $DENOM --Logfile $HOME/log-screen.txt
-else
-    screen -L -Logfile $HOME/log-screen.txt -dmS node1 bash scripts/localnode.sh _build/old/centaurid $DENOM
-fi
+# if [[ "$OSTYPE" == "darwin"* ]]; then
+  
+# else
+#     screen node1 bash scripts/localnode.sh _build/old/centaurid $DENOM
+# fi
+echo "running old node"
+screen -dms old-node bash scripts/localnode.sh _build/old/centaurid $DENOM
 
-sleep 5 # wait for note to start 
+sleep 2 # wait for note to start 
 
 # execute additional pre scripts
 if [ ! -z "$ADDITIONAL_PRE_SCRIPTS" ]; then
@@ -63,14 +73,14 @@ if [ ! -z "$ADDITIONAL_PRE_SCRIPTS" ]; then
          # check if SCRIPT is a file
         if [ -f "$SCRIPT" ]; then
             echo "executing additional pre scripts from $SCRIPT"
-            source $SCRIPT _build/old/centaurid
-            echo "CONTRACT_ADDRESS = $CONTRACT_ADDRESS"
-            sleep 5
+            source $SCRIPT 
+            sleep 2
         else
             echo "$SCRIPT is not a file"
         fi
     done
 fi
+
 
 run_fork () {
     echo "forking"
@@ -93,7 +103,7 @@ run_upgrade () {
 
     # Get upgrade height, 12 block after (6s)
     STATUS_INFO=($(./_build/old/centaurid status --home $HOME | jq -r '.NodeInfo.network,.SyncInfo.latest_block_height'))
-    UPGRADE_HEIGHT=$((STATUS_INFO[1] + 50))
+    UPGRADE_HEIGHT=$((STATUS_INFO[1] + 18))
     echo "UPGRADE_HEIGHT = $UPGRADE_HEIGHT"
 
     tar -cf ./_build/new/centaurid.tar -C ./_build/new centaurid
@@ -106,21 +116,21 @@ run_upgrade () {
     }')
 
 
-    ./_build/old/centaurid tx gov submit-legacy-proposal software-upgrade "$SOFTWARE_UPGRADE_NAME" --upgrade-height $UPGRADE_HEIGHT --upgrade-info "$UPGRADE_INFO" --title "upgrade" --description "upgrade"  --from test1 --keyring-backend test --chain-id $CHAIN_ID --home $HOME -y > /dev/null
+    ./_build/old/centaurid tx gov submit-legacy-proposal software-upgrade "$SOFTWARE_UPGRADE_NAME" --upgrade-height $UPGRADE_HEIGHT --upgrade-info "$UPGRADE_INFO" --title "upgrade" --description "upgrade"  --from $KEY --keyring-backend test --chain-id $CHAIN_ID --home $HOME -y > /dev/null
 
     sleep $SLEEP_TIME
 
-    ./_build/old/centaurid tx gov deposit 1 "20000000${DENOM}" --from test1 --keyring-backend test --chain-id $CHAIN_ID --home $HOME -y > /dev/null
+    ./_build/old/centaurid tx gov deposit 1 "20000000${DENOM}" --from $KEY --keyring-backend test --chain-id $CHAIN_ID --home $HOME -y > /dev/null
 
     sleep $SLEEP_TIME
 
-    ./_build/old/centaurid tx gov vote 1 yes --from test0 --keyring-backend test --chain-id $CHAIN_ID --home $HOME -y > /dev/null
+    ./_build/old/centaurid tx gov vote 1 yes --from $KEY --keyring-backend test --chain-id $CHAIN_ID --home $HOME -y > /dev/null
 
     sleep $SLEEP_TIME
 
-    ./_build/old/centaurid tx gov vote 1 yes --from test1 --keyring-backend test --chain-id $CHAIN_ID --home $HOME -y > /dev/null
+    # ./_build/old/centaurid tx gov vote 1 yes --from $KEY2 --keyring-backend test --chain-id $CHAIN_ID --home $HOME -y > /dev/null
 
-    sleep $SLEEP_TIME
+    # sleep $SLEEP_TIME
 
     # determine block_height to halt
     while true; do
@@ -149,12 +159,8 @@ fi
 sleep 1
 
 # run new node
-echo -e "\n\n=> =>continue running nodes after upgrade"   
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    CONTINUE="true" bash scripts/localnode.sh _build/new/centaurid $DENOM
-else
-    CONTINUE="true" bash scripts/localnode.sh _build/new/centaurid $DENOM
-fi
+echo -e "\n\n=> =>continue running nodes after upgrade"  
+CONTINUE="true" screen -dms new-node bash scripts/localnode.sh _build/new/centaurid $DENOM 
 
 sleep 5
 
