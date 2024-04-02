@@ -38,7 +38,7 @@ centaurid add-genesis-account centauri1hj5fveer5cjtn4wd6wstzugjfdxzl0xpzxlwgs "1
 # Sign genesis transaction
 centaurid genesis gentx $KEY 1000000000000000000000ppica --keyring-backend $KEYRING --chain-id $CHAINID
 
-update_test_genesis '.app_state["gov"]["params"]["voting_period"]="50s"'
+update_test_genesis '.app_state["gov"]["params"]["voting_period"]="20s"'
 update_test_genesis '.app_state["mint"]["params"]["mint_denom"]="'$DENOM'"'
 update_test_genesis '.app_state["gov"]["params"]["min_deposit"]=[{"denom":"'$DENOM'","amount": "0"}]'
 update_test_genesis '.app_state["crisis"]["constant_fee"]={"denom":"'$DENOM'","amount":"1000"}'
