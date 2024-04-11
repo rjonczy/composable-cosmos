@@ -21,7 +21,7 @@ func CreateUpgradeHandler(
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 
-		BrokenProposals := [3]uint64{2, 6, 11}
+		BrokenProposals := [3]uint64{3, 7, 12}
 		// gov module store
 		store := ctx.KVStore(keepers.GetKVStoreKey()["gov"])
 
