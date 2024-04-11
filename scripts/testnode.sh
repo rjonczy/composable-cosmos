@@ -38,7 +38,7 @@ centaurid gentx $KEY 10030009994127689ppica --keyring-backend $KEYRING --chain-i
 
 update_test_genesis '.app_state["gov"]["params"]["voting_period"]="20s"'
 update_test_genesis '.app_state["mint"]["params"]["mint_denom"]="'$DENOM'"'
-update_test_genesis '.app_state["gov"]["params"]["min_deposit"]=[{"denom":"'$DENOM'","amount": "0"}]'
+update_test_genesis '.app_state["gov"]["params"]["min_deposit"]=[{"denom":"'$DENOM'","amount": "1"}]'
 update_test_genesis '.app_state["crisis"]["constant_fee"]={"denom":"'$DENOM'","amount":"1000"}'
 update_test_genesis '.app_state["staking"]["params"]["bond_denom"]="'$DENOM'"'
 
