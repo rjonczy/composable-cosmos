@@ -223,8 +223,8 @@ github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d h1:nalkkPQ
 github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d/go.mod h1:URdX5+vg25ts3aCh8H5IFZybJYKWhJHYMTnf+ULtoC4=
 github.com/ComposableFi/ibc-apps/middleware/packet-forward-middleware/v7 v7.0.0-20240320115741-f32994360827 h1:PkDT2gEjAgttuF9lZTP+niYjcXutnmqHHK2UaAL9bLs=
 github.com/ComposableFi/ibc-apps/middleware/packet-forward-middleware/v7 v7.0.0-20240320115741-f32994360827/go.mod h1:3PHOr4UiPNtnZJutT22fm5+pjIefTlDEgtWGoOJg3A0=
-github.com/ComposableFi/ibc-go/v7 v7.0.0-20240410150933-f04551c05675 h1:qA/iYLBiO1/inamE+o0lSxMltfeAl9Hg8RSC+PTLPZw=
-github.com/ComposableFi/ibc-go/v7 v7.0.0-20240410150933-f04551c05675/go.mod h1:hjcl3RPLSDf0LSXrFyk2iTQCCFs5pfLbJb8h/5gJ2Vg=
+github.com/ComposableFi/ibc-go/v7 v7.0.0-20240417235838-759a4130305e h1:1X7RvVEC9FfJIZl0FUPVN/SFzHkYKaZjYkZb9+kDmAk=
+github.com/ComposableFi/ibc-go/v7 v7.0.0-20240417235838-759a4130305e/go.mod h1:hjcl3RPLSDf0LSXrFyk2iTQCCFs5pfLbJb8h/5gJ2Vg=
 github.com/CosmWasm/wasmd v0.40.1 h1:LxbO78t/6S8TkeQlUrJ0m5O87HtAwLx4RGHq3rdrOEU=
 github.com/CosmWasm/wasmd v0.40.1/go.mod h1:6EOwnv7MpuFaEqxcUOdFV9i4yvrdOciaY6VQ1o7A3yg=
 github.com/CosmWasm/wasmvm v1.2.6 h1:QmOaiJUyeh8+pPCjJBTgWrbi/hCzCuWewduDO85Pcpc=
