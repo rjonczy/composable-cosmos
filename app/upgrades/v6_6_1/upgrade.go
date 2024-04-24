@@ -1,4 +1,4 @@
-package v6_6_0
+package v6_6_1
 
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"

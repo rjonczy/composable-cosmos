@@ -1,4 +1,4 @@
-package v6_6_0_test
+package v6_6_1_test
 
 import (
 	"encoding/json"
@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/notional-labs/composable/v6/app/upgrades/v6_6_0"
+	"github.com/notional-labs/composable/v6/app/upgrades/v6_6_1"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -63,7 +63,7 @@ func (s *UpgradeTestSuite) TestForMigratingNewPrefix() {
 
 	/* == UPGRADE == */
 	upgradeHeight := int64(5)
-	s.ConfirmUpgradeSucceeded(v6_6_0.UpgradeName, upgradeHeight)
+	s.ConfirmUpgradeSucceeded(v6_6_1.UpgradeName, upgradeHeight)
 
 	/* == CHECK AFTER UPGRADE == */
 	checkUpgradeGovModule(s, acc1, proposal)

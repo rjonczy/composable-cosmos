@@ -9,7 +9,7 @@ HOME=mytestnet
 ROOT=$(pwd)
 DENOM=upica
 CHAIN_ID=localpica
-SOFTWARE_UPGRADE_NAME="v6_6_0"
+SOFTWARE_UPGRADE_NAME="v6_6_1"
 ADDITIONAL_PRE_SCRIPTS="./scripts/upgrade/v_6_4_8/pre-script.sh"
 ADDITIONAL_AFTER_SCRIPTS="./scripts/upgrade/v_6_4_8/post-script.sh"
 

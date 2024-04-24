@@ -2,7 +2,7 @@
 
 
 OLD_VERSION=kien-devnet-651
-SOFTWARE_UPGRADE_NAME="v6_6_0"
+SOFTWARE_UPGRADE_NAME="v6_6_1"
 ROOT=$(pwd)
 
 COMPOSABLE_VERSION="branchfortestingpfmfix"
