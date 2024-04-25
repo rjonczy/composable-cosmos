@@ -4,9 +4,9 @@ import (
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/appmodule"
 	"fmt"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
-	"github.com/notional-labs/composable/v6/app/upgrades/v6_5_1"
 	"io"
 	"os"
 	"path/filepath"
@@ -101,8 +101,8 @@ import (
 	customstaking "github.com/notional-labs/composable/v6/custom/staking"
 	"github.com/spf13/cast"
 
-	router "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward"
-	routertypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward/types"
+	pfm "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward"
+	pfmtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward/types"
 
 	custombankmodule "github.com/notional-labs/composable/v6/custom/bank"
 
@@ -138,7 +138,7 @@ import (
 )
 
 const (
-	Name       = "centauri"
+	Name       = "picasso"
 	dirName    = "banksy"
 	ForkHeight = 244008
 )
@@ -152,7 +152,7 @@ var (
 	// https://github.com/CosmWasm/wasmd/blob/02a54d33ff2c064f3539ae12d75d027d9c665f05/x/wasm/internal/types/proposal.go#L28-L34
 	EnableSpecificProposals = ""
 
-	Upgrades = []upgrades.Upgrade{v6_5_1.Upgrade, v7_0_1.Upgrade}
+	Upgrades = []upgrades.Upgrade{v7_0_1.Upgrade}
 	Forks    = []upgrades.Fork{}
 )
 
@@ -200,7 +200,7 @@ var (
 		tendermint.AppModuleBasic{},
 		mint.AppModuleBasic{},
 		wasm.AppModuleBasic{},
-		router.AppModuleBasic{},
+		pfm.AppModuleBasic{},
 		ica.AppModuleBasic{},
 		ibc_hooks.AppModuleBasic{},
 		transfermiddleware.AppModuleBasic{},
@@ -341,7 +341,7 @@ func NewComposableApp(
 
 	// transferModule := transfer.NewAppModule(app.TransferKeeper)
 	transferModule := customibctransfer.NewAppModule(appCodec, app.TransferKeeper, app.BankKeeper)
-	routerModule := router.NewAppModule(app.RouterKeeper, app.GetSubspace(routertypes.ModuleName))
+	pfmModule := pfm.NewAppModule(app.PfmKeeper, app.GetSubspace(pfmtypes.ModuleName))
 	transfermiddlewareModule := transfermiddleware.NewAppModule(&app.TransferMiddlewareKeeper)
 	txBoundaryModule := txBoundary.NewAppModule(appCodec, app.TxBoundaryKeepper)
 	ratelimitModule := ratelimitmodule.NewAppModule(&app.RatelimitKeeper)
@@ -388,7 +388,7 @@ func NewComposableApp(
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName)),
 		wasm08.NewAppModule(app.Wasm08Keeper),
-		routerModule,
+		pfmModule,
 		transfermiddlewareModule,
 		txBoundaryModule,
 		icaModule,
@@ -420,7 +420,7 @@ func NewComposableApp(
 		vestingtypes.ModuleName,
 		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
-		routertypes.ModuleName,
+		pfmtypes.ModuleName,
 		transfermiddlewaretypes.ModuleName,
 		txBoundaryTypes.ModuleName,
 		ratelimitmoduletypes.ModuleName,
@@ -464,7 +464,7 @@ func NewComposableApp(
 		group.ModuleName,
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
-		routertypes.ModuleName,
+		pfmtypes.ModuleName,
 		transfermiddlewaretypes.ModuleName,
 		txBoundaryTypes.ModuleName,
 		ratelimitmoduletypes.ModuleName,
@@ -504,7 +504,7 @@ func NewComposableApp(
 		upgradetypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		icqtypes.ModuleName,
-		routertypes.ModuleName,
+		pfmtypes.ModuleName,
 		transfermiddlewaretypes.ModuleName,
 		txBoundaryTypes.ModuleName,
 		ratelimitmoduletypes.ModuleName,
@@ -596,6 +596,15 @@ func NewComposableApp(
 		if err := app.LoadLatestVersion(); err != nil {
 			tmos.Exit(err.Error())
 		}
+		ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
+		// Initialize pinned codes in wasmvm as they are not persisted there
+		if err := app.WasmKeeper.InitializePinnedCodes(ctx); err != nil {
+			tmos.Exit(fmt.Sprintf("failed initialize pinned codes %s", err))
+		}
+
+		//if err := wasm08keeper.InitializePinnedCodes(ctx); err != nil {
+		//	tmos.Exit(fmt.Sprintf("failed initialize pinned codes %s", err))
+		//}
 	}
 
 	return app

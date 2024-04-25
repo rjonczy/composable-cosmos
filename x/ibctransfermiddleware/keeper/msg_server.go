@@ -4,7 +4,6 @@ import (
 	"context"
 
 	errorsmod "cosmossdk.io/errors"
-	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/notional-labs/composable/v6/x/ibctransfermiddleware/types"
@@ -102,21 +101,14 @@ func (ms msgServer) AddAllowedIbcToken(goCtx context.Context, req *types.MsgAddA
 	params := ms.Keeper.GetParams(ctx)
 	channelFee := findChannelParams(params.ChannelFees, req.ChannelID)
 	if channelFee != nil {
-		coin := findCoinByDenom(channelFee.AllowedTokens, req.Denom)
+		coin := findCoinByDenom(channelFee.AllowedTokens, req.MinFee.Denom)
 		if coin != nil {
-			coin_c := sdk.Coin{
-				Denom:  req.Denom,
-				Amount: sdkmath.NewInt(req.Amount),
-			}
-			coin.MinFee = coin_c
+			coin.MinFee = req.MinFee
 			coin.Percentage = req.Percentage
 		} else {
-			coin_c := sdk.Coin{
-				Denom:  req.Denom,
-				Amount: sdkmath.NewInt(req.Amount),
-			}
+
 			coin := &types.CoinItem{
-				MinFee:     coin_c,
+				MinFee:     req.MinFee,
 				Percentage: req.Percentage,
 			}
 			channelFee.AllowedTokens = append(channelFee.AllowedTokens, coin)
