@@ -139,7 +139,12 @@ func (im IBCMiddleware) OnTimeoutPacket(ctx sdk.Context, packet channeltypes.Pac
 			return nil
 		}
 
-		refund_err := im.keeper.RefundChannelCosmosFee(ctx, fee_address, sdk.AccAddress(data.Sender), []sdk.Coin{fee})
+		sender_address, err := sdk.AccAddressFromBech32(data.Sender)
+		if err != nil {
+			return nil
+		}
+
+		refund_err := im.keeper.RefundChannelCosmosFee(ctx, fee_address, sender_address, []sdk.Coin{fee})
 		if refund_err == nil {
 			im.keeper.IbcTransfermiddleware.DeleteSequenceFee(ctx, packet.Sequence)
 		}
