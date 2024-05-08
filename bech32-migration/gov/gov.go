@@ -29,11 +29,11 @@ func MigrateAddressBech32(ctx sdk.Context, storeKey storetypes.StoreKey, cdc cod
 		if err != nil {
 			vote := v1.Vote{}
 			cdc.MustUnmarshal(bz, &vote)
-			vote.Voter = utils.ConvertAccAddr(vote.Voter)
+			vote.Voter = utils.SafeConvertAddress(vote.Voter)
 			voteCount++
 			return cdc.MustMarshal(&vote)
 		}
-		vote.Voter = utils.ConvertAccAddr(vote.Voter)
+		vote.Voter = utils.SafeConvertAddress(vote.Voter)
 		voteCount++
 		return cdc.MustMarshal(&vote)
 	})
@@ -44,11 +44,11 @@ func MigrateAddressBech32(ctx sdk.Context, storeKey storetypes.StoreKey, cdc cod
 		if err != nil {
 			vote := v1.Deposit{}
 			cdc.MustUnmarshal(bz, &vote)
-			deposit.Depositor = utils.ConvertAccAddr(deposit.Depositor)
+			deposit.Depositor = utils.SafeConvertAddress(deposit.Depositor)
 			depositCount++
 			return cdc.MustMarshal(&deposit)
 		}
-		deposit.Depositor = utils.ConvertAccAddr(deposit.Depositor)
+		deposit.Depositor = utils.SafeConvertAddress(deposit.Depositor)
 		depositCount++
 		return cdc.MustMarshal(&deposit)
 	})
