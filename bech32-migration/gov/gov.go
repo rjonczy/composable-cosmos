@@ -18,7 +18,7 @@ func MigrateAddressBech32(ctx sdk.Context, storeKey storetypes.StoreKey, cdc cod
 	utils.IterateStoreByPrefix(ctx, storeKey, types.ProposalsKeyPrefix, func(bz []byte) []byte {
 		proposal := v1.Proposal{}
 		cdc.MustUnmarshal(bz, &proposal)
-		proposal.Proposer = utils.ConvertAccAddr(proposal.Proposer)
+		proposal.Proposer = utils.SafeConvertAddress(proposal.Proposer)
 		proposalCount++
 		return cdc.MustMarshal(&proposal)
 	})
