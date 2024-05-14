@@ -12,10 +12,7 @@ builds:
     binary: picad
     hooks:
       pre:
-        - cmd: bash scripts/release_pre_linux.sh
-          output: true # enable for debug
-          env:
-            - TARGET={{ .Target }}
+        - wget https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvm_muslc.x86_64.a -O /usr/lib/x86_64-linux-gnu/libwasmvm_muslc.a
     goos:
       - linux
     goarch:

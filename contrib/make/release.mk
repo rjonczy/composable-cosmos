@@ -4,6 +4,7 @@
 
 PACKAGE_NAME		  := github.com/composable-cosmos/composable-cosmos
 GOLANG_CROSS_VERSION  ?= v1.20
+COSMWASM_VERSION	  := $(shell go list -m github.com/CosmWasm/wasmvm | sed 's/.* //')
 
 # The `make release` command is running a Docker container with the image 
 # `gorelease/goreleaser-cross:${GOLANG_CROSS_VERSION}`. This command:
@@ -17,6 +18,7 @@ release:
 		-w /go/src/$(PACKAGE_NAME) \
 		-e CGO_ENABLED=1 \
 		-e GITHUB_TOKEN=${GITHUB_TOKEN} \
+		-e COSMWASM_VERSION=$(COSMWASM_VERSION) \
 		goreleaser/goreleaser-cross:${GOLANG_CROSS_VERSION} \
 		release --clean
 
@@ -28,5 +30,6 @@ release-snapshot:
 		-v "$(CURDIR)":/go/src/$(PACKAGE_NAME) \
 		-w /go/src/$(PACKAGE_NAME) \
 		-e CGO_ENABLED=1 \
+		-e COSMWASM_VERSION=$(COSMWASM_VERSION) \
 		goreleaser/goreleaser-cross:${GOLANG_CROSS_VERSION} \
 		release --clean --snapshot
