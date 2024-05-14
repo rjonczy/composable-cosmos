@@ -30,7 +30,8 @@ builds:
       - -X "github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,muslc"
       - -w -s
       - -linkmode=external
-      - -extldflags '-Wl,-z,muldefs -static -lm'
+      # - -extldflags '-Wl,-z,muldefs -static -lm'
+      - -extldflags '-static -lm'
     tags:
       - netgo
       - ledger
