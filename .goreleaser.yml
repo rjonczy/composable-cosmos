@@ -1,5 +1,6 @@
 # .goreleaser.yml
 
+
 project_name: picad
 
 env:
