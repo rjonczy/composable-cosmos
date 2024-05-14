@@ -20,10 +20,8 @@ builds:
       - linux
     goarch:
       - amd64
-      - arm64
     env:
       - CC_linux_amd64=x86_64-linux-gnu-gcc
-      - CC_linux_arm64=aarch64-linux-gnu-gcc
       - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
     flags:
       - -mod=readonly
@@ -41,8 +39,6 @@ builds:
       - netgo
       - ledger
       - muslc
-      - static
-      - static_wasm
 
   # - id: darwin
   #   main: ./cmd/centaurid
