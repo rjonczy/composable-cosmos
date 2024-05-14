@@ -21,8 +21,7 @@ builds:
     goarch:
       - amd64
     env:
-      - CC_linux_amd64=x86_64-linux-gnu-gcc
-      - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
+      - CC=x86_64-linux-gnu-gcc
     flags:
       - -mod=readonly
       - -trimpath
