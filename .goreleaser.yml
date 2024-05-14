@@ -12,7 +12,7 @@ builds:
     hooks:
       pre:
         - cmd: bash scripts/release_pre_linux.sh
-          output: false # enable for debug
+          output: true # enable for debug
           env:
             - TARGET={{ .Target }}
     goos:
