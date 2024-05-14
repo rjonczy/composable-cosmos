@@ -7,7 +7,7 @@ env:
   - CGO_ENABLED=1
 
 builds:
-  - id: linux
+  - id: picad-linux-amd64
     main: ./cmd/picad
     binary: picad
     hooks:
@@ -34,7 +34,7 @@ builds:
       - -X "github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,muslc"
       - -w -s
       - -linkmode=external
-      - -extldflags '-static -lm -lbz2'
+      - -extldflags '-Wl,-z,muldefs -static'
     tags:
       - netgo
       - ledger
