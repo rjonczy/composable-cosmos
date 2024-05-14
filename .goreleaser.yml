@@ -10,12 +10,12 @@ builds:
   - id: linux
     main: ./cmd/picad
     binary: picad
-    # hooks:
-    #   pre:
-    #     - cmd: bash scripts/release_pre_linux.sh
-    #       output: true # enable for debug
-    #       env:
-    #         - TARGET={{ .Target }}
+    hooks:
+      pre:
+        - cmd: bash scripts/release_pre_linux.sh
+          output: true # enable for debug
+          env:
+            - TARGET={{ .Target }}
     goos:
       - linux
     goarch:
