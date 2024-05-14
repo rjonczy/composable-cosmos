@@ -10,9 +10,9 @@ builds:
   - id: picad-linux-amd64
     main: ./cmd/picad
     binary: picad
-    hooks:
-      pre:
-        - wget https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvm_muslc.x86_64.a -O /usr/lib/x86_64-linux-gnu/libwasmvm_muslc.a
+    # hooks:
+    #   pre:
+    #     - wget https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvm_muslc.x86_64.a -O /usr/lib/x86_64-linux-gnu/libwasmvm_muslc.a
     goos:
       - linux
     goarch:
@@ -29,9 +29,9 @@ builds:
       - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
       - -X "github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,muslc"
       - -w -s
-      - -linkmode=external
+      # - -linkmode=external
       # - -extldflags '-Wl,-z,muldefs -static -lm'
-      - -extldflags '-static -lm'
+      # - -extldflags '-static -lm'
     tags:
       - netgo
       - ledger
